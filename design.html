@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TankUp — Design System Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --accent:#16A34A;          /* graphics & large text only — not for small white text */
+    --primary:#15803D;         /* button bg: white text = 5.0:1, passes AA */
+    --primary-hover:#166534;   /* 7.0:1 */
+    --petrol-bg:#FEF3C7; --petrol-tx:#92400E;
+    --cng-bg:#E0F2FE;    --cng-tx:#075985;
+    --ev-bg:#EDE9FE;     --ev-tx:#5B21B6;
+    --bg:#FFFFFF; --wash:#F8FAFC; --ink:#0F172A; --second:#475569; --line:#E8EDF3;
+    --error:#B91C1C; --warning:#92400E;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Plus Jakarta Sans",-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  header{max-width:880px;margin:0 auto;padding:56px 24px 8px}
+  .eyebrow{font-size:12px;font-weight:700;letter-spacing:.14em;color:var(--accent)}
+  header h1{margin:10px 0 0;font-size:clamp(30px,5vw,44px);font-weight:800;letter-spacing:-.02em}
+  header p{margin:10px 0 0;color:var(--second);font-size:17px;max-width:60ch}
+  main{max-width:880px;margin:0 auto;padding:24px}
+  section{padding:32px 0;border-top:1px solid var(--line)}
+  section:first-child{border-top:0}
+  .no{font-size:12px;font-weight:700;letter-spacing:.14em;color:var(--second)}
+  h2{font-size:22px;margin:8px 0 4px;letter-spacing:-.01em}
+  .sub{color:var(--second);font-size:15px;margin:0 0 20px;max-width:62ch}
+  /* color */
+  .swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+  .swatch{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+  .swatch .c{height:56px}
+  .swatch .t{padding:10px 12px;font-size:12.5px;color:var(--second)}
+  .swatch .t b{display:block;font-size:14px;color:var(--ink)}
+  .note{font-size:13px;color:var(--second);margin-top:12px;max-width:64ch}
+  /* type */
+  .type-display{font-size:34px;font-weight:800;letter-spacing:-.02em;margin:10px 0}
+  .type-title{font-size:22px;font-weight:700;margin:10px 0}
+  .type-body{font-size:16.5px;line-height:1.6;margin:10px 0}
+  .type-caption{font-size:13.5px;color:var(--second);margin:10px 0}
+  /* buttons */
+  .btn{font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    border-radius:999px;padding:0 28px;min-height:52px;font-size:16px;font-weight:700;cursor:pointer;
+    border:1px solid transparent;transition:background .15s,transform .1s,box-shadow .15s}
+  .btn-primary{background:var(--primary);color:#fff;box-shadow:0 1px 2px rgba(21,128,61,.35)}
+  .btn-primary:hover{background:var(--primary-hover);box-shadow:0 4px 14px rgba(21,128,61,.30)}
+  .btn-primary:active{transform:translateY(1px)}
+  .btn-primary:focus-visible{outline:3px solid #BBF7D0;outline-offset:2px}
+  .btn-quiet{background:#fff;color:var(--ink);border-color:var(--line);margin-left:10px}
+  .btn-quiet:hover{border-color:#CBD5E1;background:var(--wash)}
+  .btn-quiet:focus-visible{outline:3px solid #E2E8F0;outline-offset:2px}
+  .btn-sm{min-height:44px;padding:0 20px;font-size:14.5px}
+  .btn[disabled]{opacity:.45;cursor:not-allowed;box-shadow:none}
+  .btn-row{display:flex;flex-wrap:wrap;gap:2px;margin-top:6px}
+  /* inputs */
+  label.lbl{display:block;font-size:14px;font-weight:600;margin:0 0 8px}
+  .field{width:100%;font-family:inherit;padding:14px 16px;font-size:16px;color:var(--ink);
+    border:1.5px solid var(--line);border-radius:12px;background:#fff}
+  .field::placeholder{color:#94A3B8}
+  .field:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(22,163,74,.15)}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .chip{font-family:inherit;border-radius:999px;padding:10px 18px;font-size:14px;font-weight:600;
+    border:1.5px solid var(--line);background:#fff;color:var(--ink);cursor:pointer}
+  .chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  /* card */
+  .card{border:1px solid var(--line);border-radius:16px;padding:20px;margin-top:14px;background:#fff}
+  .card h3{margin:0;font-size:19px;letter-spacing:-.01em}
+  .meta{color:var(--second);font-size:14.5px;margin:6px 0 0}
+  .tags{margin-top:12px;display:flex;gap:8px}
+  .tag{font-size:12px;font-weight:700;letter-spacing:.06em;border-radius:7px;padding:4px 10px}
+  .price{font-size:24px;font-weight:800;margin:12px 0 0;letter-spacing:-.01em}
+  .price small{font-size:14px;font-weight:600;color:var(--second)}
+  .markers{display:flex;gap:22px;margin-top:16px;flex-wrap:wrap}
+  .marker{display:flex;align-items:center;gap:9px;font-weight:600;font-size:14.5px}
+  .dot{width:22px;height:22px;border-radius:50% 50% 50% 4px;transform:rotate(-45deg)}
+  /* dark strip */
+  .strip{margin-top:16px;background:#0F172A;color:#F1F5F9;border-radius:16px;padding:24px}
+  .strip .meta{color:#B6C0CE}
+  footer{max-width:880px;margin:0 auto;padding:8px 24px 40px;color:var(--second);font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <div class="eyebrow">TANKUP · DESIGN SYSTEM · V2 MINIMAL</div>
+  <h1>Quiet surfaces, loud actions.</h1>
+  <p>One font (Plus Jakarta Sans), hairline dividers instead of boxes, AA-cleared contrast, and a single green reserved for the action that matters.</p>
+</header>
+<main>
+  <section>
+    <div class="no">01 — COLOR</div>
+    <h2>Restrained palette, honest contrast</h2>
+    <p class="sub">Text pairings all clear WCAG AA (≥ 4.5:1). Bright green is accent-only; buttons use its darker sibling.</p>
+    <div class="swatches">
+      <div class="swatch"><div class="c" style="background:var(--primary)"></div><div class="t"><b>Action green</b>#15803D · white text 5.0:1</div></div>
+      <div class="swatch"><div class="c" style="background:var(--accent)"></div><div class="t"><b>Accent green</b>#16A34A · graphics only</div></div>
+      <div class="swatch"><div class="c" style="background:var(--petrol-bg)"></div><div class="t"><b>Petrol tint</b>#FEF3C7 · text #92400E</div></div>
+      <div class="swatch"><div class="c" style="background:var(--cng-bg)"></div><div class="t"><b>CNG tint</b>#E0F2FE · text #075985</div></div>
+      <div class="swatch"><div class="c" style="background:var(--ev-bg)"></div><div class="t"><b>EV tint</b>#EDE9FE · text #5B21B6</div></div>
+      <div class="swatch"><div class="c" style="background:var(--ink)"></div><div class="t"><b>Ink</b>#0F172A · primary text</div></div>
+      <div class="swatch"><div class="c" style="background:var(--second)"></div><div class="t"><b>Secondary</b>#475569 · 7.5:1 on white</div></div>
+      <div class="swatch"><div class="c" style="background:var(--error)"></div><div class="t"><b>Error</b>#B91C1C · darkened to pass</div></div>
+    </div>
+    <p class="note">Fixed from v1: old button (#16A34A + white ≈ 3.3:1) and old muted gray (#6B7280) failed small-text contrast — both replaced.</p>
+  </section>
+
+  <section>
+    <div class="no">02 — TYPOGRAPHY</div>
+    <h2>Plus Jakarta Sans, four sizes</h2>
+    <p class="sub">Geometric-humanist sans — friendlier than system Roboto, still excellent at small sizes on cheap screens.</p>
+    <div class="type-display">Find fuel near Lekki</div>
+    <div class="type-title">TotalEnergies, Lekki Phase 1</div>
+    <div class="type-body">2.1 km away · ~7 min · Petrol ₦865/L · Available. Body never drops below 16px — readable at arm's length while parked.</div>
+    <div class="type-caption">Updated 5 min ago · Open 24 hrs · 4.2 (318 reviews)</div>
+  </section>
+
+  <section>
+    <div class="no">03 — BUTTONS</div>
+    <h2>One loud action, one quiet</h2>
+    <p class="sub">Solid green pill for the driving-critical action; hairline quiet button for everything else. Visible focus rings, pressed state, disabled state.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary">Get Directions →</button>
+      <button class="btn btn-quiet">Save station</button>
+    </div>
+    <div class="btn-row" style="margin-top:12px">
+      <button class="btn btn-primary btn-sm">Get Directions</button>
+      <button class="btn btn-quiet btn-sm">Details</button>
+      <button class="btn btn-primary btn-sm" disabled>Locating…</button>
+    </div>
+  </section>
+
+  <section>
+    <div class="no">04 — INPUT</div>
+    <h2>Search that stays out of the way</h2>
+    <p class="sub">Borderless-feel field; green glow only on focus.</p>
+    <label class="lbl" for="search">Where to?</label>
+    <input id="search" class="field" type="text" placeholder="Station, area, street…" value="Lekki">
+    <div class="chips">
+      <span class="chip on">Petrol</span><span class="chip on">CNG</span><span class="chip">EV</span>
+      <span class="chip">Open now</span><span class="chip">≤ 5 km</span>
+    </div>
+  </section>
+
+  <section>
+    <div class="no">05 — STATION CARD</div>
+    <h2>Price first, everything else second</h2>
+    <p class="sub">PRD §8. Tinted energy tags (dark text on tint = AA-safe) instead of white-on-bright.</p>
+    <div class="card">
+      <h3>TotalEnergies — Lekki Phase 1</h3>
+      <div class="meta">2.1 km · ~7 min · Open 24 hrs</div>
+      <div class="tags">
+        <span class="tag" style="background:var(--petrol-bg);color:var(--petrol-tx)">PETROL</span>
+        <span class="tag" style="background:var(--cng-bg);color:var(--cng-tx)">CNG</span>
+      </div>
+      <div class="price">₦865/L <small>· Available · updated 5 min ago</small></div>
+      <div class="meta">4.2 ★ (318 reviews) · Admiralty Way, Lekki</div>
+      <div class="btn-row" style="margin-top:14px">
+        <button class="btn btn-primary btn-sm">Get Directions</button>
+        <button class="btn btn-quiet btn-sm">Details</button>
+      </div>
+    </div>
+    <div class="markers">
+      <span class="marker"><span class="dot" style="background:var(--petrol-tx)"></span>Petrol</span>
+      <span class="marker"><span class="dot" style="background:var(--cng-tx)"></span>CNG</span>
+      <span class="marker"><span class="dot" style="background:var(--ev-tx)"></span>EV</span>
+    </div>
+    <div class="strip">
+      <div class="no" style="color:#7D8AA0">DARK MODE</div>
+      <h2 style="color:#fff">Same card, night surface</h2>
+      <div class="meta">Markers keep hue; tags keep tint pairings — distinguishable without reading labels.</div>
+    </div>
+  </section>
+</main>
+<footer>Minimal v2 · Plus Jakarta Sans · all text ≥ 4.5:1 · targets ≥ 44px · tokens → Phase 1 (<code>lib/design/tokens.dart</code>)</footer>
+</body>
+</html>
