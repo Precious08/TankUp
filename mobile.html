@@ -354,6 +354,7 @@ $("list").onclick=e=>{if(e.target.closest(".row")||e.target.closest("button"))re
  if(snap!==0){snap=0;renderSheet();}};
 $("sheetTitle").onclick=e=>{if(e.target.closest("button"))return;
  if(snap!==0){snap=0;renderSheet();}};
+$("veil").addEventListener("click",e=>{if(e.target===$("veil"))closeVeil();});
 $("q").addEventListener("input",e=>{S.q=e.target.value;$("qclear").classList.toggle("on",!!S.q);renderSheet();
  const items=pool();if(S.q&&items.length&&snap===0){snap=1;renderSheet();}});
 $("q").addEventListener("keydown",e=>{if(e.key==="Enter"){const items=pool();if(items.length)focusStation(items[0].id);}});
