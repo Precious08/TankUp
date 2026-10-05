@@ -87,8 +87,16 @@
   #navb{position:absolute;top:calc(74px + env(safe-area-inset-top));left:12px;right:12px;z-index:22;background:var(--ink);color:#fff;
     border-radius:16px;padding:13px 16px;display:none;box-shadow:0 10px 28px rgba(0,0,0,.4)}
   #navb.on{display:block}
-  #navb .eta{font-size:21px;font-weight:800}#navb .rd{font-size:12.5px;color:#B6C0CE;margin-top:2px}
-  #navb button{margin-top:10px;width:100%;background:var(--error);color:#fff}
+  #navb .eta{font-size:22px;font-weight:800}#navb .rd{font-size:13px;color:#B6C0CE;margin-top:3px}
+  #navSteps{margin-top:10px;border-top:1px solid rgba(255,255,255,.14)}
+  #navSteps .stp{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.14)}
+  #navSteps .stp span{color:#D6DEE8}#navSteps .stp b{color:#fff;white-space:nowrap}
+  #navSt{background:rgba(255,255,255,.08);border-radius:12px;padding:10px 12px;margin-top:10px;font-size:13px}
+  #navSt b{color:#fff}#navSt span{color:#B6C0CE}
+  #navSt .p{color:#4ADE80;font-weight:800;font-size:15px;margin-top:2px}
+  #navBtns{display:flex;gap:8px;margin-top:10px}
+  #muteBtn{background:rgba(255,255,255,.14);color:#fff}
+  #endBtn{background:var(--error);color:#fff}
   #toast{position:absolute;bottom:120px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:13.5px;
     font-weight:600;border-radius:999px;padding:11px 20px;z-index:60;display:none;white-space:nowrap;box-shadow:0 10px 30px rgba(0,0,0,.35)}
   .me-pulse{position:absolute;border-radius:50%;background:rgba(37,99,235,.15);transform:translate(-50%,-50%);z-index:3}
@@ -107,7 +115,7 @@
       <input id="q" placeholder="Search stations, areas…" autocomplete="off">
       <button id="qclear" onclick="clearQ()">✕</button>
     </div>
-    <button id="stateChip" onclick="openStates()">Nigeria ▾</button>
+    <button id="stateChip" onclick="openStates()">Lagos ▾</button>
     <button id="avatar">P</button>
   </header>
 
@@ -125,8 +133,12 @@
     <div id="list"></div>
   </div>
 
-  <div id="navb"><div class="eta" id="navEta"></div><div class="rd" id="navRd"></div>
-    <button class="btn" onclick="endNav()">End navigation</button></div>
+  <div id="navb">
+    <div class="eta" id="navEta"></div><div class="rd" id="navRd"></div>
+    <div id="navSteps"></div>
+    <div id="navSt"></div>
+    <div id="navBtns"><button class="btn" id="muteBtn" onclick="toggleMute()">🔊 Voice on</button>
+    <button class="btn" id="endBtn" onclick="endNav()">End</button></div></div>
 
   <div class="veil" id="veil"><div class="card" id="veilCard"></div></div>
   <div id="toast"></div>
@@ -195,7 +207,7 @@ const FT={Petrol:["#FEF3C7","#B45309"],CNG:["#E0F2FE","#075985"],EV:["#EDE9FE","
 
 /* ================= STATE ================= */
 const store=(k,v)=>v===undefined?JSON.parse(localStorage.getItem("tankup."+k)||"null"):localStorage.setItem("tankup."+k,JSON.stringify(v));
-const S={state:"All",lga:"All",pos:null,posLabel:"Nigeria",sel:null,nav:null,q:"",fuel:"All",mode:"near",
+const S={state:"Lagos",lga:"All",pos:null,posLabel:"Lagos",sel:null,nav:null,q:"",fuel:"All",mode:"near",voice:true,
  saved:new Set(store("saved")||[])};
 const $=id=>document.getElementById(id);
 function toast(m){const t=$("toast");t.textContent=m;t.style.display="block";clearTimeout(t._x);t._x=setTimeout(()=>t.style.display="none",1800);}
@@ -301,19 +313,11 @@ function renderSheet(){
   const near=S.mode==="near";
   const items=(near?[...pool()]:ST.filter(s=>S.saved.has(s.id)))
    .sort((a,b)=>(S.pos?havKm(S.pos.lat,S.pos.lng,a.lat,a.lng):0)-(S.pos?havKm(S.pos.lat,S.pos.lng,b.lat,b.lng):0));
-  const lgas=S.state==="All"?[]:[...new Set(ST.filter(s=>s.state===S.state).map(s=>s.lga))].sort();
   $("sheetTitle").innerHTML=`
    <div style="display:flex;gap:8px;margin-bottom:6px">
     <button class="btn ${near?"btn-p":"btn-q"}" style="min-height:38px;font-size:13px" onclick="S.mode='near';renderSheet()">Nearby</button>
     <button class="btn ${near?"btn-q":"btn-p"}" style="min-height:38px;font-size:13px" onclick="S.mode='saved';renderSheet()">♥ Saved (${S.saved.size})</button></div>
-   <div>${near?`Near ${S.posLabel}`:"Your saved stations"} <small>· ${items.length}</small></div>
-   ${near?`<div style="display:flex;gap:6px;margin-top:8px;overflow-x:auto">${["All","Petrol","CNG","EV"].map(f=>
-    `<button class="btn ${S.fuel===f?"btn-p":"btn-q"}" style="min-height:34px;font-size:12px;padding:0 14px;flex-shrink:0" onclick="S.fuel='${f}';renderSheet();render()">${f}</button>`).join("")}</div>`:""}
-   ${near&&lgas.length?`<div style="display:flex;gap:6px;margin-top:8px;overflow-x:auto">
-    <button class="btn ${S.lga==="All"?"btn-p":"btn-q"}" style="min-height:34px;font-size:12px;padding:0 14px;flex-shrink:0" onclick="S.lga='All';renderSheet();render()">All LGAs</button>
-    ${lgas.map(g=>`<button class="btn ${S.lga===g?"btn-p":"btn-q"}" style="min-height:34px;font-size:12px;padding:0 14px;flex-shrink:0" onclick="S.lga='${g}';renderSheet();render()">${g}</button>`).join("")}</div>`:""}
-   ${near?`<div style="font-size:11.5px;color:var(--second);margin-top:8px"><span style="color:${FC.Petrol}">●</span> Petrol <span style="color:${FC.CNG}">●</span> CNG <span style="color:${FC.EV}">●</span> EV</div>`:""}`;
-  // LGA filter applies to map pins via pool()
+   <div>${near?`Near ${S.posLabel}`:"Your saved stations"} <small>· ${items.length}</small></div>`;
   $("sheet").style.height=sheetH()+"px";
   $("list").innerHTML=items.length?items.map(s=>
    `<div class="row" onclick="focusStation(${s.id})">
@@ -354,14 +358,13 @@ function openStates(){
 }
 function renderStateList(q){
   q=(q||"").toLowerCase();
-  const all=["All",...STATES.filter(t=>t!=="All")];
-  $("stlist").innerHTML=all.filter(t=>t.toLowerCase().includes(q)).map(t=>{const n=t==="All"?ST.length:ST.filter(s=>s.state===t).length;
-    return `<button onclick="pickState('${t}')"><span>${t==="All"?"🇳🇬 All Nigeria":t}</span><small>${n} stations${t===S.state?" · ✓":""}</small></button>`;}).join("")
+  $("stlist").innerHTML=STATES.filter(t=>t.toLowerCase().includes(q)).map(t=>{const n=ST.filter(s=>s.state===t).length;
+    return `<button onclick="pickState('${t}')"><span>${t}</span><small>${n} stations${t===S.state?" · ✓":""}</small></button>`;}).join("")
    ||`<div style="padding:16px;text-align:center;color:var(--second)">No state matches.</div>`;
 }
 function pickState(t){S.state=t;S.lga="All";S.mode="near";S.sel=null;store("homestate",t);closeVeil();
- $("stateChip").textContent=(t==="All"?"Nigeria":t)+" ▾";
- fitState(t);toast(t==="All"?"Browsing all Nigeria":"Showing stations in "+t);}
+ $("stateChip").textContent=t+" ▾";
+ fitState(t);toast("Showing stations in "+t);}
 function closeVeil(){$("veil").classList.remove("on");}
 
 /* ================= DETAILS + NAV ================= */
@@ -388,16 +391,27 @@ function openDetails(id){
 }
 function toggleSave(id){S.saved.has(id)?S.saved.delete(id):S.saved.add(id);
  store("saved",[...S.saved]);renderSheet();toast(S.saved.has(id)?"Saved ♥":"Removed");openDetails(id);}
-function startNav(id){
+function toggleMute(){S.voice=!S.voice;
+ $("muteBtn").textContent=S.voice?"🔊 Voice on":"🔇 Muted";
+ if(S.nav)startNav(S.nav,true);else toast(S.voice?"Voice guidance on":"Voice guidance muted");}
+function startNav(id,quiet){
   const s=ST.find(x=>x.id===id);S.nav=id;closeVeil();closePop();
   const ox=S.pos?X(S.pos.lng):V.cx, oy=S.pos?Y(S.pos.lat):V.cy+vh()/2/V.z; // GPS dot, else bottom-centre
   const d=`M ${ox} ${oy} L ${ox} ${Y(s.lat)} L ${X(s.lng)} ${Y(s.lat)}`;
   document.querySelector("#routePath")?.remove();
   world.insertAdjacentHTML("beforeend",`<path id="routePath" d="${d}" stroke="#15803D" stroke-width="16" fill="none" stroke-linecap="round"/>`);
   const k=S.pos?havKm(S.pos.lat,S.pos.lng,s.lat,s.lng):null;
-  $("navEta").textContent=k==null?price(s):`${Math.max(1,Math.round(k/25*60))} min · ${k.toFixed(1)} km`;
-  $("navRd").textContent=`To ${s.name}, ${s.area} — ${price(s)} · ${s.avail}`;
-  $("navb").classList.add("on");toast("Navigating — drive safe 🛣️");
+  const mins=k==null?null:Math.max(1,Math.round(k/25*60));
+  $("navEta").textContent=k==null?"On your way":`${mins} min · ${k.toFixed(1)} km`;
+  $("navRd").textContent=k==null?`To ${s.name}, ${s.area} — enable location for live ETA`
+   :`To ${s.name} — ${S.voice?"voice guidance on":"voice muted"}`;
+  $("navSteps").innerHTML=`
+   <div class="stp"><span>1. Head toward ${s.area}</span><b>${k==null?s.lga:k.toFixed(1)+" km"}</b></div>
+   <div class="stp"><span>2. Arrive at ${s.name.split("—")[0].trim()}</span><b>${s.open?"Open":"Closed"}</b></div>`;
+  $("navSt").innerHTML=`<b>${s.name}</b> <span>· ${s.fuels.join(" · ")}</span>
+   <div class="p">${price(s)} <span>· ${s.avail} · ${s.hours} · ${s.rate} ★</span></div>`;
+  $("muteBtn").textContent=S.voice?"🔊 Voice on":"🔇 Muted";
+  $("navb").classList.add("on");if(!quiet)toast("Navigating — drive safe 🛣️");
 }
 function endNav(){S.nav=null;document.querySelector("#routePath")?.remove();$("navb").classList.remove("on");render();}
 
@@ -407,33 +421,33 @@ function nearestState(lng,lat){
 }
 function land(pos,label){
   S.pos=pos;S.posLabel=label;S.state=nearestState(pos.lng,pos.lat);S.lga="All";
-  $("stateChip").textContent=(S.state==="All"?"Nigeria":S.state)+" ▾";
+  $("stateChip").textContent=S.state+" ▾";
   S.sel=null;
   fitState(S.state);
   toast("Showing stations near "+label);
 }
+function chooseState(){store("onboarded",1);closeVeil();openStates();}
 function firstRun(){
   if(store("onboarded")){const h=store("homestate");
-    if(h){S.state=h;$("stateChip").textContent=(h==="All"?"Nigeria":h)+" ▾";}
-    S.pos=null;S.posLabel=S.state==="All"?"Nigeria":S.state;fitState(S.state);renderSheet();return;}
+    S.state=(h&&h!=="All")?h:"Lagos";S.lga="All";
+    $("stateChip").textContent=S.state+" ▾";
+    S.pos=null;S.posLabel=S.state;fitState(S.state);renderSheet();return;}
   $("veilCard").innerHTML=`
    <h3>📍 Welcome to TankUp</h3><p>Find fuel near you, anywhere in Nigeria.</p>
    <div class="statelist" style="margin-top:6px">
     <div class="kv"><span>Your stations</span><b>Your area first</b></div>
     <div class="kv"><span>Other states</span><b>One tap away</b></div></div>
    <button class="bigbtn" style="background:var(--primary);color:#fff" onclick="askGeo()">Use my location</button>
-   <button class="bigbtn ghost" onclick="browseAll()">Browse all Nigeria</button>`;
+   <button class="bigbtn ghost" onclick="chooseState()">Choose your state</button>`;
   $("veil").classList.add("on");
 }
 function askGeo(){
   closeVeil();toast("Requesting location…");
-  if(!navigator.geolocation)return browseAll();
+  if(!navigator.geolocation)return chooseState();
   navigator.geolocation.getCurrentPosition(
     p=>{store("onboarded",1);land({lng:p.coords.longitude,lat:p.coords.latitude},"you");},
-    ()=>browseAll(),{timeout:6000});
+    ()=>chooseState(),{timeout:6000});
 }
-function browseAll(){store("onboarded",1);closeVeil();S.pos=null;S.posLabel="Nigeria";S.state="All";
- $("stateChip").textContent="Nigeria ▾";fitState("All");toast("Browsing all Nigeria — pick your state anytime");}
 window.addEventListener("resize",render);
 drawBase();firstRun();
 </script>
