@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TankUp — Demo Web App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primary:#15803D; --primary-h:#166534; --accent:#16A34A;
+    --ink:#0F172A; --second:#475569; --line:#E8EDF3; --wash:#F4F6F9; --card:#fff;
+    --petrol:#B45309; --petrol-bg:#FEF3C7; --cng:#075985; --cng-bg:#E0F2FE; --ev:#5B21B6; --ev-bg:#EDE9FE;
+    --error:#B91C1C; --radius:14px;
+  }
+  body.dark{--ink:#F1F5F9;--second:#9AA7B8;--line:#243049;--wash:#0F172A;--card:#16213A;background:#0B1220}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;font-family:"Plus Jakarta Sans",-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--wash);color:var(--ink);height:100vh;display:flex;flex-direction:column}
+  /* top bar */
+  .top{display:flex;gap:12px;align-items:center;padding:12px 18px;background:var(--card);border-bottom:1px solid var(--line);z-index:30}
+  .logo{display:flex;align-items:center;gap:9px;font-weight:800;font-size:19px;white-space:nowrap}
+  .logo .mk{width:32px;height:32px;border-radius:10px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px}
+  .sbox{position:relative;flex:1;max-width:560px}
+  .sbox input{width:100%;font-family:inherit;font-size:15px;padding:12px 16px 12px 42px;border-radius:12px;border:1.5px solid var(--line);background:var(--wash);color:var(--ink)}
+  .sbox input:focus{outline:none;border-color:var(--primary);background:var(--card)}
+  .sbox .ic{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--second)}
+  .sugg{position:absolute;top:110%;left:0;right:0;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 14px 40px rgba(0,0,0,.18);overflow:hidden;display:none;z-index:50}
+  .sugg.on{display:block}
+  .sugg button{display:flex;width:100%;gap:10px;align-items:center;background:none;border:0;font-family:inherit;text-align:left;
+    padding:11px 14px;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer}
+  .sugg button:hover{background:var(--wash)}
+  .sugg small{color:var(--second);font-weight:500}
+  .top .sp{flex:1}
+  .pillbtn{font-family:inherit;border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;
+    padding:9px 16px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap}
+  .pillbtn:hover{border-color:var(--primary)}
+  .avatar{width:40px;height:40px;border-radius:50%;background:var(--primary);color:#fff;font-weight:800;font-size:16px;
+    border:0;cursor:pointer;flex-shrink:0}
+  /* layout */
+  .main{flex:1;display:flex;min-height:0}
+  .rail{width:76px;background:var(--card);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:4px;z-index:20}
+  .rl{width:60px;border:0;background:none;font-family:inherit;font-size:10px;font-weight:700;letter-spacing:.03em;color:var(--second);
+    border-radius:14px;padding:9px 0 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative}
+  .rl svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+  .rl.on{background:var(--ink);color:#fff}
+  .rl .bdg{position:absolute;top:4px;right:8px;min-width:17px;height:17px;border-radius:999px;background:var(--primary);color:#fff;
+    font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 4px}
+  .panel{width:372px;background:var(--card);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+  .phead{padding:16px 16px 10px;border-bottom:1px solid var(--line)}
+  .phead h2{margin:0;font-size:19px}
+  .phead p{margin:4px 0 0;font-size:13px;color:var(--second)}
+  .pbody{flex:1;overflow-y:auto;padding:12px 14px 20px}
+  .mapwrap{flex:1;position:relative;min-width:0;background:#E8F0E4}
+  .mapwrap svg{position:absolute;inset:0;width:100%;height:100%}
+  .pin{position:absolute;transform:translate(-50%,-100%);cursor:pointer;z-index:5}
+  .pin .d{width:26px;height:26px;border-radius:50% 50% 50% 4px;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+  .pin.sel .d{outline:3px solid var(--ink);outline-offset:1px}
+  .pin.dim{opacity:.35}
+  .pin .pv{position:absolute;top:-8px;left:50%;transform:translate(-50%,-100%);background:var(--ink);color:#fff;font-size:11px;
+    font-weight:800;border-radius:8px;padding:3px 8px;white-space:nowrap}
+  .me{position:absolute;width:18px;height:18px;background:#2563EB;border:4px solid #fff;border-radius:50%;z-index:4;
+    box-shadow:0 0 0 9px rgba(37,99,235,.16)}
+  /* filter + cards */
+  .frow{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+  .chip{font-family:inherit;border-radius:999px;padding:8px 15px;font-size:13px;font-weight:700;border:1.5px solid var(--line);
+    background:var(--card);color:var(--ink);cursor:pointer}
+  .chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  select,input.txt{font-family:inherit;font-size:13.5px;padding:9px 12px;border-radius:10px;border:1.5px solid var(--line);
+    background:var(--card);color:var(--ink);width:100%}
+  select:focus,input.txt:focus{outline:none;border-color:var(--primary)}
+  label.lbl{font-size:12px;font-weight:700;color:var(--second);display:block;margin:12px 0 6px;letter-spacing:.03em}
+  input[type=range]{width:100%;accent-color:var(--primary)}
+  .st{background:var(--card);border:1.5px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:10px;cursor:pointer}
+  .st:hover{border-color:#CBD5E1}.st.sel{border-color:var(--primary);background:#F0FDF4}
+  body.dark .st.sel{background:#0E2A1A}
+  .st h4{margin:0;font-size:15px}
+  .st .mt{font-size:12.5px;color:var(--second);margin-top:3px}
+  .st .ft{display:flex;align-items:center;margin-top:8px;gap:8px}
+  .tag{font-size:10.5px;font-weight:800;letter-spacing:.05em;border-radius:6px;padding:3px 8px}
+  .st .pr{margin-left:auto;font-weight:800;color:var(--primary);font-size:15px;white-space:nowrap}
+  /* drawer */
+  .drawer{position:absolute;top:0;right:0;bottom:0;width:min(400px,94%);background:var(--card);border-left:1px solid var(--line);
+    box-shadow:-20px 0 60px rgba(0,0,0,.2);z-index:15;display:none;flex-direction:column}
+  .drawer.on{display:flex;animation:sl .22s ease}
+  @keyframes sl{from{transform:translateX(30px);opacity:0}to{transform:none;opacity:1}}
+  .dbody{flex:1;overflow-y:auto;padding:16px}
+  .dbody h2{margin:0;font-size:21px}
+  .btn{font-family:inherit;border-radius:999px;min-height:48px;font-size:15px;font-weight:800;cursor:pointer;border:1px solid transparent;padding:0 22px}
+  .btn-p{background:var(--primary);color:#fff}.btn-p:hover{background:var(--primary-h)}
+  .btn-q{background:var(--card);border-color:var(--line);color:var(--ink)}
+  .kv{display:flex;justify-content:space-between;gap-8px;font-size:13.5px;padding:8px 0;border-top:1px solid var(--line)}
+  .kv span{color:var(--second)}.kv b{text-align:right}
+  .stars{color:var(--petrol);font-weight:800}
+  .cmp{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+  .cmp th,.cmp td{padding:8px;border-bottom:1px solid var(--line);text-align:left}
+  .cmp th{color:var(--second);font-size:12px}
+  .best{color:var(--primary);font-weight:800}
+  /* compare tray */
+  .tray{position:absolute;left:14px;bottom:14px;z-index:12;background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:10px 14px;font-size:13px;font-weight:700;box-shadow:0 10px 30px rgba(0,0,0,.18);display:none;gap:10px;align-items:center}
+  .tray.on{display:flex}
+  /* nav banner */
+  .navb{position:absolute;top:14px;left:14px;right:14px;z-index:12;background:var(--ink);color:#fff;border-radius:16px;padding:14px 18px;display:none}
+  .navb.on{display:block}
+  .navb .eta{font-size:22px;font-weight:800}.navb .rd{font-size:13px;color:#B6C0CE;margin-top:3px}
+  .navb button{margin-top:10px;background:var(--error);color:#fff;border:0}
+  .steps{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 14px;margin-top:10px;font-size:13px}
+  /* toast */
+  #toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:14px;
+    font-weight:600;border-radius:999px;padding:12px 22px;z-index:99;display:none;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+  body.dark #toast{background:#fff;color:var(--ink)}
+  .empty{text-align:center;color:var(--second);font-size:14px;padding:26px 10px}
+  .vrow{display:flex;gap:8px;align-items:center;background:var(--wash);border-radius:12px;padding:10px 12px;margin-bottom:8px;font-size:13.5px}
+  .vrow b{font-size:14px}.vrow small{color:var(--second)}
+  .vrow button{margin-left:auto}
+  .mini{font-family:inherit;font-size:12px;font-weight:700;border:1.5px solid var(--line);background:var(--card);color:var(--ink);
+    border-radius:999px;padding:6px 12px;cursor:pointer}
+  .mini.go{border-color:var(--primary);color:var(--primary)}
+  .swrow{display:flex;align-items:center;justify-content:space-between;font-size:14px;font-weight:600;padding:10px 0;border-top:1px solid var(--line)}
+  .sw{width:44px;height:26px;border-radius:999px;border:0;background:#CBD5E1;cursor:pointer;position:relative;flex-shrink:0}
+  .sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .15s}
+  .sw.on{background:var(--primary)}.sw.on::after{left:21px}
+  @media(max-width:900px){.panel{position:absolute;left:76px;top:0;bottom:0;z-index:10;box-shadow:10px 0 40px rgba(0,0,0,.15)}.rail{width:64px}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="logo"><span class="mk">⚡</span>TankUp <span style="font-size:11px;font-weight:700;color:var(--second);border:1px solid var(--line);border-radius:6px;padding:2px 7px">DEMO</span></div>
+  <div class="sbox"><span class="ic">🔍</span><input id="q" placeholder="Search stations, areas, streets… (try “Lekki”)" autocomplete="off"><div class="sugg" id="sugg"></div></div>
+  <div class="sp"></div>
+  <button class="pillbtn" id="themeBtn" onclick="toggleTheme()">🌙 Dark</button>
+  <button class="avatar" id="avatarBtn" onclick="show('profile')">P</button>
+</header>
+
+<div class="main">
+  <nav class="rail">
+    <button class="rl on" data-s="explore"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/></svg>HOME</button>
+    <button class="rl" data-s="saved"><svg viewBox="0 0 24 24"><path d="M12 20.5S3.5 15.5 3.5 9.6A4.6 4.6 0 0 1 8.2 5c1.6 0 3 .9 3.8 2.2A4.6 4.6 0 0 1 15.8 5a4.6 4.6 0 0 1 4.7 4.6c0 5.9-8.5 10.9-8.5 10.9Z"/></svg>SAVED<span class="bdg" id="savedBdg">0</span></button>
+    <button class="rl" data-s="recent"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>RECENT</button>
+    <button class="rl" data-s="trips"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5Z"/></svg>TRIPS</button>
+    <button class="rl" data-s="profile"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.4-3.6 4.2-5.4 7.5-5.4s6.1 1.8 7.5 5.4"/></svg>PROFILE</button>
+  </nav>
+
+  <aside class="panel">
+    <div class="phead"><h2 id="pTitle">Explore</h2><p id="pSub"></p></div>
+    <div class="pbody" id="pBody"></div>
+  </aside>
+
+  <div class="mapwrap" id="mapwrap">
+    <svg viewBox="0 0 800 900" preserveAspectRatio="xMidYMid slice" id="mapsvg">
+      <rect width="800" height="900" fill="#E8F0E4"/>
+      <path d="M0 640 Q150 600 280 645 T800 620 L800 900 L0 900 Z" fill="#CFE3EF"/>
+      <rect x="0" y="150" width="800" height="40" fill="#fff" stroke="#D7DEE6" stroke-width="3"/>
+      <rect x="120" y="0" width="38" height="900" fill="#fff" stroke="#D7DEE6" stroke-width="3"/>
+      <rect x="430" y="0" width="32" height="640" fill="#fff" stroke="#D7DEE6" stroke-width="3"/>
+      <rect x="0" y="400" width="800" height="34" fill="#fff" stroke="#D7DEE6" stroke-width="3"/>
+      <rect x="0" y="520" width="800" height="24" fill="#fff" stroke="#D7DEE6" stroke-width="2"/>
+      <path d="M120 300 L430 300 L430 400" stroke="#F3C969" stroke-width="20" fill="none"/>
+      <path d="M120 300 L430 300 L430 400" stroke="#fff" stroke-width="3" stroke-dasharray="10 10" fill="none"/>
+      <rect x="540" y="220" width="150" height="110" rx="12" fill="#D9EAD3"/>
+      <rect x="40" y="450" width="130" height="80" rx="12" fill="#D9EAD3"/>
+      <text x="30" y="140" font-size="16" fill="#94A3B8" font-weight="700">ADMIRALTY WAY</text>
+      <text x="500" y="420" font-size="16" fill="#94A3B8" font-weight="700">IKOYI ROAD</text>
+      <text x="300" y="700" font-size="18" fill="#7FA8C9" font-weight="700">LAGOS LAGOON</text>
+      <path id="routePath" d="" stroke="#15803D" stroke-width="12" fill="none" stroke-linecap="round" opacity=".9"/>
+      <path id="routeDash" d="" stroke="#fff" stroke-width="3" stroke-dasharray="2 14" fill="none" stroke-linecap="round"/>
+    </svg>
+    <div class="me" style="left:32%;top:44%"></div>
+    <div id="pins"></div>
+    <div class="navb" id="navb"><div class="eta" id="navEta"></div><div class="rd" id="navRd"></div>
+      <div class="steps" id="navSteps" style="color:var(--ink)"></div>
+      <button class="btn" onclick="endNav()">End navigation</button></div>
+    <div class="tray" id="tray"></div>
+  </div>
+
+  <div class="drawer" id="drawer">
+    <div class="phead"><button class="pillbtn" onclick="closeDrawer()">‹ Back to map</button><h2 id="dName" style="margin-top:10px"></h2><p id="dAddr"></p></div>
+    <div class="dbody" id="dBody"></div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+/* ---------- data ---------- */
+const ST = [
+ {id:1,name:"TotalEnergies — Lekki P1",area:"Lekki",addr:"Admiralty Way, Lekki",km:2.1,min:7,fuels:["Petrol","CNG"],pp:865,unit:"/L",avail:"Available",open:true,hours:"Open 24 hrs",rate:4.2,rc:318,x:54,y:38},
+ {id:2,name:"NNPC — Ikoyi Rd",area:"Ikoyi",addr:"Ikoyi Road",km:3.4,min:11,fuels:["Petrol"],pp:859,unit:"/L",avail:"Available",open:true,hours:"Open · closes 11pm",rate:4.0,rc:204,x:66,y:30},
+ {id:3,name:"ChargePoint — VI Hub",area:"Victoria Island",addr:"Adeola Odeku, VI",km:4.0,min:13,fuels:["EV"],pp:310,unit:"/kWh",avail:"2/6 stalls free",open:true,hours:"Open 24 hrs",rate:4.6,rc:97,x:30,y:52},
+ {id:4,name:"Mobil — Admiralty",area:"Lekki",addr:"Admiralty Way, Lekki",km:1.2,min:5,fuels:["Petrol","EV"],pp:870,unit:"/L",avail:"Petrol low",open:true,hours:"Open 24 hrs",rate:3.9,rc:411,x:22,y:24},
+ {id:5,name:"CNG Express — Lekki",area:"Lekki",addr:"Chevron Drive, Lekki",km:5.2,min:16,fuels:["CNG"],pp:490,unit:"/SCM",avail:"Available",open:false,hours:"Closed · opens 6am",rate:4.4,rc:58,x:74,y:20},
+ {id:6,name:"AP — Ozumba Mbadiwe",area:"Victoria Island",addr:"Ozumba Mbadiwe, VI",km:5.8,min:18,fuels:["Petrol","CNG","EV"],pp:872,unit:"/L",avail:"Available",open:true,hours:"Open 24 hrs",rate:4.1,rc:156,x:44,y:60},
+ {id:7,name:"Eterna — Lekki Epe",area:"Lekki",addr:"Lekki-Epe Expressway",km:7.3,min:21,fuels:["Petrol"],pp:855,unit:"/L",avail:"Available",open:true,hours:"Open · closes 10pm",rate:3.8,rc:89,x:84,y:52},
+ {id:8,name:"VoltHub — Ikoyi",area:"Ikoyi",addr:"Bourdillon Rd, Ikoyi",km:4.6,min:14,fuels:["EV"],pp:295,unit:"/kWh",avail:"4/8 stalls free",open:true,hours:"Open 24 hrs",rate:4.7,rc:64,x:56,y:16},
+];
+const FC={Petrol:"#B45309",CNG:"#075985",EV:"#5B21B6"};
+const FT={Petrol:["#FEF3C7","#B45309"],CNG:["#E0F2FE","#075985"],EV:["#EDE9FE","#5B21B6"]};
+const REV={1:[["Fast pumps, accurate meter.",5],["Queue at rush hour.",3]],3:[["Both CCS stalls worked first try.",5]],4:[["Petrol ran low on Sunday.",2]]};
+/* ---------- state ---------- */
+const store=(k,v)=>v===undefined?JSON.parse(localStorage.getItem("tankup."+k)||"null"):localStorage.setItem("tankup."+k,JSON.stringify(v));
+let S={tab:"explore",q:"Lekki",fuel:"All",openOnly:false,maxKm:10,sort:"rec",sel:null,cmp:[],nav:null,
+ saved:new Set(store("saved")||[1]),recent:store("recent")||[],profile:store("profile")||{name:"Precious",theme:"light",units:"km",voice:true,tolls:false},
+ vehicles:store("vehicles")||[{n:"Work Van",t:"CNG",active:true},{n:"Personal",t:"Petrol",active:false}],
+ notif:store("notif")||{price:true,avail:true,route:false}};
+const $=id=>document.getElementById(id);
+const dist=s=>S.profile.units==="mi"?(s.km*0.621).toFixed(1)+" mi":s.km.toFixed(1)+" km";
+const price=s=>"₦"+s.pp.toLocaleString()+s.unit;
+function persist(){store("saved",[...S.saved]);store("recent",S.recent);store("profile",S.profile);store("vehicles",S.vehicles);store("notif",S.notif);}
+function toast(m){const t=$("toast");t.textContent=m;t.style.display="block";clearTimeout(t._x);t._x=setTimeout(()=>t.style.display="none",1800);}
+/* ---------- filtering ---------- */
+function pool(){return ST.filter(s=>{
+  const q=S.q.toLowerCase();
+  if(q && !(s.name+" "+s.addr+" "+s.area).toLowerCase().includes(q))return false;
+  if(S.fuel!=="All"&&!s.fuels.includes(S.fuel))return false;
+  if(S.openOnly&&!s.open)return false;
+  if(s.km>S.maxKm)return false;return true;});}
+function sorted(a){const x=[...a];
+  if(S.sort==="price")x.sort((p,q)=>p.pp-q.pp);
+  else if(S.sort==="dist")x.sort((p,q)=>p.km-q.km);
+  else x.sort((p,q)=>(q.rate+q.open*0.5)-(p.rate+p.open*0.5));return x;}
+/* ---------- map ---------- */
+function renderPins(){
+  const items=pool(),ids=new Set(items.map(s=>s.id));
+  $("pins").innerHTML=items.map(s=>
+   `<div class="pin ${S.sel===s.id?"sel":""}" style="left:${s.x}%;top:${s.y}%" onclick="select(${s.id},true)">
+      <div class="d" style="background:${FC[s.fuels[0]]}"></div>
+      ${S.sel===s.id?`<div class="pv">${price(s)}</div>`:""}</div>`).join("");
+}
+function select(id,pushRecent){
+  S.sel=(S.sel===id?null:id);
+  if(id&&pushRecent){S.recent=[id,...S.recent.filter(r=>r!==id)].slice(0,10);persist();if(S.tab==="recent")renderPanel();}
+  renderPins();renderList();renderPop();
+}
+function renderPop(){}
+/* ---------- panel ---------- */
+document.querySelectorAll(".rl").forEach(b=>b.onclick=()=>{S.tab=b.dataset.s;document.querySelectorAll(".rl").forEach(x=>x.classList.toggle("on",x===b));renderPanel();});
+function renderPanel(){
+  const T={explore:"Explore",saved:"Saved",recent:"Recent",trips:"Trips",profile:"Profile"};
+  $("pTitle").textContent=T[S.tab];const B=$("pBody");
+  if(S.tab==="explore")return renderExplore(B);
+  if(S.tab==="saved"){const items=ST.filter(s=>S.saved.has(s.id));
+    $("pSub").textContent=items.length+" station(s) · tap ♥ to remove";
+    B.innerHTML=items.length?items.map(card).join(""):`<div class="empty">Nothing saved yet — open a station and tap ♡ Save.</div>`;return;}
+  if(S.tab==="recent"){const items=S.recent.map(id=>ST.find(s=>s.id===id)).filter(Boolean);
+    $("pSub").textContent="Automatically remembered";
+    B.innerHTML=(items.length?items.map(card).join("")+`<button class="pillbtn" style="width:100%" onclick="S.recent=[];persist();renderPanel();toast('Recent history cleared')">Clear recent</button>`:`<div class="empty">No recent stations yet.</div>`);return;}
+  if(S.tab==="trips")return renderTrips(B);
+  if(S.tab==="profile")return renderProfile(B);
+}
+function card(s){return `<div class="st ${S.sel===s.id?"sel":""}" onclick="select(${s.id},true);openDrawer(${s.id})">
+  <h4>${s.name}</h4><div class="mt">${dist(s)} · ~${s.min} min · ${s.open?"Open":"Closed"} · ${s.avail}</div>
+  <div class="ft">${s.fuels.map(f=>`<span class="tag" style="background:${FT[f][0]};color:${FT[f][1]}">${f.toUpperCase()}</span>`).join("")}
+  <span class="pr">${price(s)}</span></div></div>`;}
+function renderExplore(B){
+  const items=sorted(pool());
+  $("pSub").textContent=`${items.length} station(s) · ${S.q?`“${S.q}” · `:""}${S.profile.units==="mi"?"miles":"km"}`;
+  B.innerHTML=`
+   <div class="frow">${["All","Petrol","CNG","EV"].map(f=>`<button class="chip ${S.fuel===f?"on":""}" onclick="S.fuel='${f}';renderPanel();renderPins()">${f}</button>`).join("")}
+   <button class="chip ${S.openOnly?"on":""}" onclick="S.openOnly=!S.openOnly;renderPanel();renderPins()">Open now</button></div>
+   <label class="lbl">MAX DISTANCE · ${S.maxKm} KM</label>
+   <input type="range" min="2" max="10" value="${S.maxKm}" oninput="S.maxKm=+this.value;renderPanel();renderPins()">
+   <label class="lbl">SORT BY</label>
+   <select onchange="S.sort=this.value;renderPanel()">
+     <option value="rec" ${S.sort==="rec"?"selected":""}>Recommended</option>
+     <option value="price" ${S.sort==="price"?"selected":""}>Lowest price</option>
+     <option value="dist" ${S.sort==="dist"?"selected":""}>Nearest</option></select>
+   <div style="height:12px"></div>
+   ${items.length?items.map(card).join(""):`<div class="empty">No stations match — loosen a filter.</div>`}`;
+}
+/* ---------- search ---------- */
+$("q").addEventListener("input",e=>{S.q=e.target.value;S.sel=null;renderSugg();if(S.tab==="explore")renderPanel();renderPins();});
+function renderSugg(){
+  const q=S.q.toLowerCase(),box=$("sugg");
+  if(!q){box.classList.remove("on");return;}
+  const areas=[...new Set(ST.map(s=>s.area))].filter(a=>a.toLowerCase().includes(q)).map(a=>({t:a,s:"Area"}));
+  const sts=ST.filter(s=>(s.name+" "+s.addr).toLowerCase().includes(q)).slice(0,5).map(s=>({t:s.name,s:s.addr,id:s.id}));
+  const all=[...areas,...sts].slice(0,7);
+  box.innerHTML=all.length?all.map((o,i)=>`<button onclick="pickSugg(${o.id||0},'${o.t.replace(/'/g,"")}')"><span>📍</span><span>${o.t}<br><small>${o.s}</small></span></button>`).join("")
+    :`<div style="padding:14px;font-size:14px;color:var(--second)">No matches for “${S.q}”.</div>`;
+  box.classList.add("on");
+}
+function pickSugg(id,label){
+  $("sugg").classList.remove("on");
+  if(id){select(id,true);openDrawer(id);}
+  else{S.q=label;$("q").value=label;renderPanel();renderPins();toast(`Showing stations around ${label}`);}
+}
+document.addEventListener("click",e=>{if(!e.target.closest(".sbox"))$("sugg").classList.remove("on");});
+/* ---------- drawer (details) ---------- */
+function openDrawer(id){
+  const s=ST.find(x=>x.id===id);if(!s)return;
+  $("dName").textContent=s.name;$("dAddr").textContent=`${s.addr} · ${dist(s)} · ~${s.min} min`;
+  const inC=S.cmp.includes(id);
+  $("dBody").innerHTML=`
+   <div class="tags" style="display:flex;gap:6px">${s.fuels.map(f=>`<span class="tag" style="background:${FT[f][0]};color:${FT[f][1]}">${f.toUpperCase()}</span>`).join("")}</div>
+   <div style="font-size:30px;font-weight:800;margin:10px 0 2px">${price(s)}</div>
+   <div class="kv"><span>Availability</span><b>${s.avail}</b></div>
+   <div class="kv"><span>Hours</span><b>${s.hours}</b></div>
+   <div class="kv"><span>Rating</span><span class="stars">${s.rate} ★ (${s.rc})</span></div>
+   <div style="display:flex;gap:8px;margin:14px 0">
+     <button class="btn btn-p" style="flex:2" onclick="startNav(${s.id})">Get Directions</button>
+     <button class="btn btn-q" style="flex:1" onclick="toggleSave(${s.id})">${S.saved.has(id)?"♥ Saved":"♡ Save"}</button></div>
+   <button class="pillbtn" style="width:100%" onclick="toggleCmp(${s.id})">${inC?"✓ In comparison — tap to remove":"＋ Add to comparison"}</button>
+   <label class="lbl">COMPARE NEARBY ${S.fuel==="All"?"PETROL":S.fuel.toUpperCase()}</label>
+   ${cmpTable(s)}
+   <label class="lbl">REVIEWS</label>
+   ${(REV[id]||[["No reviews yet — be the first.",null]]).map(r=>`<div class="kv"><span>${r[0]}</span>${r[1]?`<span class="stars">${r[1]}★</span>`:""}</div>`).join("")}
+   <button class="pillbtn" style="width:100%;margin-top:6px" onclick="addReview(${s.id})">Write a review</button>
+   <label class="lbl">CORRECT SOMETHING?</label>
+   <button class="pillbtn" style="width:100%" onclick="reportPrice(${s.id})">Report price change</button>`;
+  $("drawer").classList.add("on");
+}
+function cmpTable(s){
+  const key=s.fuels.includes("Petrol")?"Petrol":s.fuels[0];
+  const rows=ST.filter(x=>x.fuels.includes(key)&&x.open).sort((a,b)=>a.pp-b.pp).slice(0,3);
+  const best=Math.min(...rows.map(r=>r.pp));
+  return `<table class="cmp"><tr><th>Station</th><th>Price</th><th></th></tr>${rows.map(r=>
+   `<tr><td>${r.name.split("—")[0].trim()}${r.id===s.id?" (this)":""}</td>
+    <td class="${r.pp===best?"best":""}">${price(r)}</td>
+    <td><button class="mini" onclick="select(${r.id},true);openDrawer(${r.id})">Open</button></td></tr>`).join("")}</table>`;
+}
+function closeDrawer(){$("drawer").classList.remove("on");}
+function toggleSave(id){S.saved.has(id)?S.saved.delete(id):S.saved.add(id);persist();updateBadge();
+  toast(S.saved.has(id)?"Saved ♥":"Removed from saved");openDrawer(id);if(S.tab==="saved")renderPanel();}
+function toggleCmp(id){
+  if(S.cmp.includes(id))S.cmp=S.cmp.filter(c=>c!==id);
+  else{if(S.cmp.length>=3){toast("Comparison holds 3 max — remove one first");return;}S.cmp.push(id);}
+  openDrawer(id);renderTray();
+}
+function renderTray(){
+  const t=$("tray");
+  if(!S.cmp.length){t.classList.remove("on");return;}
+  t.innerHTML=`⚖️ ${S.cmp.length} selected <button class="mini go" onclick="showCmp()">Compare now</button> <button class="mini" onclick="S.cmp=[];renderTray();if($('drawer').classList.contains('on'))openDrawer(S.sel)">Clear</button>`;
+  t.classList.add("on");
+}
+function showCmp(){
+  const rows=S.cmp.map(id=>ST.find(s=>s.id===id));
+  const best=Math.min(...rows.map(r=>r.pp));
+  $("dName").textContent="Price comparison";$("dAddr").textContent=rows.length+" stations side by side";
+  $("dBody").innerHTML=`<table class="cmp"><tr><th>Station</th><th>Price</th><th>Availability</th></tr>${rows.map(r=>
+   `<tr><td>${r.name}</td><td class="${r.pp===best?"best":""}">${price(r)}${r.pp===best?" ★":""}</td><td>${r.avail}</td></tr>`).join("")}</table>
+   <button class="pillbtn" style="width:100%;margin-top:12px" onclick="S.cmp=[];renderTray();closeDrawer()">Done</button>`;
+  $("drawer").classList.add("on");
+}
+function addReview(id){
+  const t=prompt("Your review:");if(!t)return;
+  const r=+(prompt("Rating 1-5:")||"5");(REV[id]=REV[id]||[]).unshift([t,Math.min(5,Math.max(1,r||5))]);
+  const s=ST.find(x=>x.id===id);s.rc++;toast("Review posted — thanks!");openDrawer(id);
+}
+function reportPrice(id){
+  const v=+(prompt("New price in ₦ (numbers only):")||"0");if(!v)return;
+  ST.find(x=>x.id===id).pp=v;toast(`Price updated to ₦${v.toLocaleString()} — thanks!`);openDrawer(id);renderPins();if(S.tab==="explore")renderPanel();
+}
+/* ---------- navigation ---------- */
+function startNav(id){
+  const s=ST.find(x=>x.id===id);S.nav=id;closeDrawer();
+  const mx=32*8,my=44*9; // me px approx in 800x900 space
+  const dx=s.x*8,dy=s.y*9;
+  const d=`M${mx} ${my} L${mx} ${dy} L${dx} ${dy}`;
+  $("routePath").setAttribute("d",d);$("routeDash").setAttribute("d",d);
+  $("navEta").textContent=`${s.min} min · ${dist(s)}`;
+  $("navRd").textContent=`To ${s.name} — voice guidance ${S.profile.voice?"on":"off"}${S.profile.tolls?" · avoiding tolls":""}`;
+  $("navSteps").innerHTML=`<div class="kv"><span>1. Head east on Admiralty Way</span><b>1.1 km</b></div>
+   <div class="kv"><span>2. Continue to destination</span><b>${dist(s)}</b></div>
+   <div class="kv"><span>${s.fuels.join(" · ")}</span><b>${price(s)}</b></div>`;
+  $("navb").classList.add("on");toast("Navigating — drive safe 🛣️");
+}
+function endNav(){S.nav=null;$("routePath").setAttribute("d","");$("routeDash").setAttribute("d","");$("navb").classList.remove("on");toast("Navigation ended");}
+/* ---------- trips ---------- */
+function renderTrips(B){
+  $("pSub").textContent="Recent and planned routes";
+  B.innerHTML=`
+   <label class="lbl">FROM</label><select id="tFrom"><option>Lekki</option><option>Ikoyi</option><option>Victoria Island</option><option>Lagos Mainland</option></select>
+   <label class="lbl">TO</label><select id="tTo"><option>Ibadan</option><option>Lekki</option><option>Victoria Island</option><option>Epe</option></select>
+   <button class="btn btn-p" style="width:100%;margin:12px 0" onclick="planTrip()">Find stations on route</button>
+   <div id="tripRes"></div>
+   <label class="lbl">RECENT</label>
+   <div class="vrow"><div>🏠<br><small>Lekki → VI · yesterday</small></div><button class="mini" style="margin-left:auto" onclick="toast('Route re-run: 2 stations')">Re-run</button></div>`;
+}
+function planTrip(){
+  const a=$("tFrom").value,b=$("tTo").value;
+  const opts=[...ST].sort((p,q)=>p.pp-q.pp).slice(0,3);
+  $("tripRes").innerHTML=`<div class="empty" style="padding:6px">On-route ${a} → ${b} (${opts.length})</div>`+
+   opts.map(s=>`<div class="st" onclick="select(${s.id},true);openDrawer(${s.id})"><h4>${s.name}</h4>
+   <div class="mt">On route · ${s.open?"Open":"Closed"} · ${s.avail}</div>
+   <div class="ft">${s.fuels.map(f=>`<span class="tag" style="background:${FT[f][0]};color:${FT[f][1]}">${f.toUpperCase()}</span>`).join("")}<span class="pr">${price(s)}</span></div></div>`).join("");
+  toast(`3 on-route stations: ${a} → ${b}`);
+}
+/* ---------- profile ---------- */
+function show(sec){S.tab=sec;document.querySelectorAll(".rl").forEach(x=>x.classList.toggle("on",x.dataset.s===sec));renderPanel();}
+function renderProfile(B){
+  const p=S.profile;
+  $("pSub").textContent="Driver dashboard · everything editable";
+  $("avatarBtn").textContent=(p.name||"P")[0].toUpperCase();
+  $("themeBtn").textContent=p.theme==="dark"?"☀️ Light":"🌙 Dark";
+  B.innerHTML=`
+   <div class="st" style="cursor:default"><h4>${p.name}</h4><div class="mt">${S.vehicles.find(v=>v.active)?.t||""} · ${S.vehicles.find(v=>v.active)?.n||""} · Synced</div>
+    <div class="frow"><button class="mini" onclick="editName()">Edit name</button>
+    <button class="mini" onclick="toggleTheme()">${p.theme==="dark"?"☀️ Light mode":"🌙 Dark mode"}</button></div></div>
+   <label class="lbl">MY VEHICLES (TAP TO ACTIVATE)</label>
+   ${S.vehicles.map((v,i)=>`<div class="vrow" style="${v.active?"outline:2px solid var(--primary)":""}"><div>🚐<br><small>${v.t}</small></div>
+     <div><b>${v.n}</b><br><small>${v.active?"Active":"Tap Set active"}</small></div>
+     <button class="mini ${v.active?"":"go"}" onclick="setActiveV(${i})">${v.active?"✓":"Set active"}</button>
+     <button class="mini" onclick="delV(${i})">✕</button></div>`).join("")}
+   <button class="pillbtn" style="width:100%" onclick="addV()">＋ Add vehicle</button>
+   <label class="lbl">PREFERENCES</label>
+   <div class="swrow">Voice guidance<button class="sw ${p.voice?"on":""}" onclick="S.profile.voice=!S.profile.voice;persist();renderPanel()"></button></div>
+   <div class="swrow">Avoid tolls<button class="sw ${p.tolls?"on":""}" onclick="S.profile.tolls=!S.profile.tolls;persist();renderPanel()"></button></div>
+   <div class="swrow">Distance units<button class="mini" onclick="S.profile.units=S.profile.units==='km'?'mi':'km';persist();renderPanel();renderPins();toast('Units: '+(S.profile.units==='km'?'kilometres':'miles'))">${p.units==="km"?"km → switch to mi":"mi → switch to km"}</button></div>
+   <label class="lbl">NOTIFICATIONS</label>
+   ${[["price","Price changes"],["avail","Availability updates"],["route","Route updates"]].map(([k,l])=>
+    `<div class="swrow">${l}<button class="sw ${S.notif[k]?"on":""}" onclick="S.notif.${k}=!S.notif.${k};persist();renderPanel();toast('${l} '+(S.notif.${k}?'on':'off'))"></button></div>`).join("")}
+   <label class="lbl">DATA</label>
+   <button class="pillbtn" style="width:100%" onclick="S.saved=new Set();S.recent=[];persist();updateBadge();renderPanel();toast('Saved + recent cleared')">Clear saved &amp; recent</button>`;
+}
+function editName(){const n=prompt("Display name:",S.profile.name);if(n){S.profile.name=n;persist();renderPanel();toast("Name updated");}}
+function addV(){
+  const n=prompt("Vehicle nickname (e.g. School Run):");if(!n)return;
+  const t=prompt("Energy type — Petrol, CNG or EV:")||"Petrol";
+  S.vehicles.push({n,t:t[0].toUpperCase()+t.slice(1).toLowerCase(),active:false});persist();renderPanel();toast("Vehicle added");
+}
+function setActiveV(i){S.vehicles.forEach((v,j)=>v.active=i===j);persist();renderPanel();toast(S.vehicles[i].n+" is now active — map re-filtered");}
+function delV(i){if(S.vehicles.length===1){toast("Keep at least one vehicle");return;}
+  const was=S.vehicles[i].active;S.vehicles.splice(i,1);if(was)S.vehicles[0].active=true;persist();renderPanel();toast("Vehicle removed");}
+function toggleTheme(){S.profile.theme=S.profile.theme==="dark"?"light":"dark";persist();applyTheme();renderPanel();}
+function applyTheme(){document.body.classList.toggle("dark",S.profile.theme==="dark");}
+/* ---------- misc ---------- */
+function updateBadge(){$("savedBdg").textContent=S.saved.size;$("savedBdg").style.display=S.saved.size?"flex":"none";}
+applyTheme();updateBadge();renderPanel();renderPins();
+</script>
+</body>
+</html>
