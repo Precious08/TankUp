@@ -268,7 +268,7 @@ function setLga(v){S.lga=v;S.sel=null;renderPanel();renderPins();}
 function renderExplore(B){
   const items=sorted(pool());
   const lgas=S.state==="All"?[]:[...new Set(ST.filter(s=>s.state===S.state).map(s=>s.lga))].sort();
-  $("pSub").textContent=`${items.length} station(s)${S.state!=="All"?` · ${S.state}`:" · Nigeria"}${S.q?` · “${S.q}”`:""}`;
+  $("pSub").textContent=`${items.length} station(s)${S.state!=="All"?` · ${S.state}`:" · Nigeria"}${S.q?` · “${S.q}”`:""} · SAMPLE DATA`;
   B.innerHTML=`
    <label class="lbl">MY STATE</label>
    <select onchange="setState(this.value)">${STATES.map(t=>`<option ${S.state===t?"selected":""}>${t}</option>`).join("")}</select>

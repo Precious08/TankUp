@@ -141,6 +141,8 @@ Exit: app launches cold to map tab <2s on mid-range Android; onboarding completa
 
 Goal: Open → Find → Compare → Choose.
 
+Surface strategy (decided): `mobile.html` is the lead device surface — new features land there first. `demo.html` is the desktop showcase and feature reference (compare tray, reviews, trips planner live there until ported).
+
 - Home map: user dot, station markers (3 types), re-center button, bottom sheet (nearby list + quick filters + saved/recent).
 - Search: station/area/street/destination; "Lekki" returns stations around Lekki.
 - Filters: Petrol/CNG/EV, price, distance, availability, Open now — one tap, no leaving map.

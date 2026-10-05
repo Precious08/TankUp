@@ -308,7 +308,7 @@ function renderSheet(){
    <div style="display:flex;gap:8px;margin-bottom:6px">
     <button class="btn ${near?"btn-p":"btn-q"}" style="min-height:38px;font-size:13px" onclick="S.mode='near';renderSheet()">Nearby</button>
     <button class="btn ${near?"btn-q":"btn-p"}" style="min-height:38px;font-size:13px" onclick="S.mode='saved';renderSheet()">♥ Saved (${S.saved.size})</button></div>
-   <div>${near?`Near ${S.posLabel}`:"Your saved stations"} <small>· ${items.length}</small></div>`;
+   <div>${near?`Near ${S.posLabel}`:"Your saved stations"} <small>· ${items.length} · SAMPLE DATA</small></div>`;
   $("sheet").style.height=sheetH()+"px";
   $("list").innerHTML=items.length?items.map(s=>
    `<div class="row" onclick="focusStation(${s.id})">
