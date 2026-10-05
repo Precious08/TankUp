@@ -166,9 +166,11 @@
   <div id="toast"></div>
 </div>
 <script src="data/stations.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.local.js"></script>
 <script>
 /* ================= DATA (sample — verify before launch) ================= */
-const ST=TANKUP_STATIONS;
+let ST=TANKUP_STATIONS;
 const STATES=[...new Set(ST.map(s=>s.state))].sort();const FC={Petrol:"#B45309",CNG:"#075985",EV:"#5B21B6"};
 const FT={Petrol:["#FEF3C7","#B45309"],CNG:["#E0F2FE","#075985"],EV:["#EDE9FE","#5B21B6"]};
 
@@ -530,7 +532,32 @@ function askGeo(){
     ()=>chooseState(),{timeout:6000});
 }
 window.addEventListener("resize",render);
-drawBase();firstRun();
+/* ---------- live data (Supabase; silent fallback to bundled sample) ---------- */
+function dbRow(r,i){
+  let lng=0,lat=0;const loc=r.location;
+  if(typeof loc==="string"){const m=loc.match(/(-?[\d.]+)\s+(-?[\d.]+)/);if(m){lng=+m[1];lat=+m[2];}}
+  else if(loc&&loc.coordinates){lng=+loc.coordinates[0];lat=+loc.coordinates[1];}
+  let av="Available";try{const o=typeof r.availability==="string"?JSON.parse(r.availability):(r.availability||{});
+    const vs=Object.values(o);if(vs.length){const t=String(vs[0]);av=t.charAt(0).toUpperCase()+t.slice(1);}}catch(e){}
+  return {id:i+1,name:r.name,state:r.state||"Lagos",lga:r.lga||"",area:r.area,addr:r.address,lng,lat,
+   fuels:r.fuels&&r.fuels.length?r.fuels:["Petrol"],pp:r.petrol_price??r.cng_price??r.ev_price??0,
+   unit:r.price_unit||"/L",open:r.is_open!==false,avail:av,hours:r.hours||"Open 24 hrs",
+   rate:r.rating??4,rc:r.review_count??0};
+}
+async function loadLive(){
+  try{
+    const c=window.TANKUP_CONFIG||{};
+    if(!window.supabase||!c.SUPABASE_URL||/xyzcompany|paste-your/.test(c.SUPABASE_URL+(c.SUPABASE_ANON_KEY||"")))return false;
+    const cli=window.supabase.createClient(c.SUPABASE_URL,c.SUPABASE_ANON_KEY);
+    const res=await cli.from("stations").select("*").order("name").limit(500);
+    if(res.error||!res.data||!res.data.length)return false;
+    return res.data.map(dbRow);
+  }catch(e){return false;}
+}
+drawBase();
+(async()=>{const live=await loadLive();
+ if(live&&live.length){ST=live;toast("Live data connected ✓");}
+ firstRun();})();
 </script>
 </body>
 </html>

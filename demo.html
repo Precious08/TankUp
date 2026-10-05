@@ -188,12 +188,14 @@
 </div>
 <div id="toast"></div>
 <script src="data/stations.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.local.js"></script>
 <script>
 /* ---------- data (generated data/stations.js is the source; Lagos 8 keep demo detail via EXTRA) ---------- */
 const EXTRA={"TotalEnergies — Lekki P1":{km:2.1,min:7,x:54,y:38,rate:4.2,rc:318},"NNPC — Ikoyi Rd":{km:3.4,min:11,x:66,y:30,rate:4.0,rc:204},"ChargePoint — VI Hub":{km:4.0,min:13,x:30,y:52,rate:4.6,rc:97},"Mobil — Admiralty":{km:1.2,min:5,x:22,y:24,rate:3.9,rc:411},"CNG Express — Lekki":{km:5.2,min:16,x:74,y:20,rate:4.4,rc:58},"AP — Ozumba Mbadiwe":{km:5.8,min:18,x:44,y:60,rate:4.1,rc:156},"Eterna — Lekki Epe":{km:7.3,min:21,x:84,y:52,rate:3.8,rc:89},"VoltHub — Ikoyi":{km:4.6,min:14,x:56,y:16,rate:4.7,rc:64}};
 const nx=lng=>Math.min(95,Math.max(5,(lng-2.7)/12*100));
 const ny=lat=>Math.min(93,Math.max(7,(1-(lat-4.2)/9.7)*100));
-const ST=TANKUP_STATIONS.map(s=>{const e=EXTRA[s.name]||{};
+let ST=TANKUP_STATIONS.map(s=>{const e=EXTRA[s.name]||{};
  return Object.assign({},s,{km:e.km??null,min:e.min??null,rate:e.rate??s.rate,rc:e.rc??s.rc,
   x:e.x??+nx(s.lng).toFixed(1),y:e.y??+ny(s.lat).toFixed(1)});});
 const STATES=["All",...new Set(ST.map(s=>s.state))].sort((a,b)=>a==="All"?-1:b==="All"?1:a.localeCompare(b));
@@ -450,7 +452,35 @@ function toggleTheme(){S.profile.theme=S.profile.theme==="dark"?"light":"dark";p
 function applyTheme(){document.body.classList.toggle("dark",S.profile.theme==="dark");}
 /* ---------- misc ---------- */
 function updateBadge(){$("savedBdg").textContent=S.saved.size;$("savedBdg").style.display=S.saved.size?"flex":"none";}
-applyTheme();updateBadge();renderPanel();renderPins();
+/* ---------- live data (Supabase; silent fallback to bundled sample) ---------- */
+function dbRow(r,i){
+  let lng=0,lat=0;const loc=r.location;
+  if(typeof loc==="string"){const m=loc.match(/(-?[\d.]+)\s+(-?[\d.]+)/);if(m){lng=+m[1];lat=+m[2];}}
+  else if(loc&&loc.coordinates){lng=+loc.coordinates[0];lat=+loc.coordinates[1];}
+  let av="Available";try{const o=typeof r.availability==="string"?JSON.parse(r.availability):(r.availability||{});
+    const vs=Object.values(o);if(vs.length){const t=String(vs[0]);av=t.charAt(0).toUpperCase()+t.slice(1);}}catch(e){}
+  return {id:i+1,name:r.name,state:r.state||"Lagos",lga:r.lga||"",area:r.area,addr:r.address,lng,lat,
+   fuels:r.fuels&&r.fuels.length?r.fuels:["Petrol"],pp:r.petrol_price??r.cng_price??r.ev_price??0,
+   unit:r.price_unit||"/L",open:r.is_open!==false,avail:av,hours:r.hours||"Open 24 hrs",
+   rate:r.rating??4,rc:r.review_count??0};
+}
+async function loadLive(){
+  try{
+    const c=window.TANKUP_CONFIG||{};
+    if(!window.supabase||!c.SUPABASE_URL||/xyzcompany|paste-your/.test(c.SUPABASE_URL+(c.SUPABASE_ANON_KEY||"")))return false;
+    const cli=window.supabase.createClient(c.SUPABASE_URL,c.SUPABASE_ANON_KEY);
+    const res=await cli.from("stations").select("*").order("name").limit(500);
+    if(res.error||!res.data||!res.data.length)return false;
+    return res.data.map(dbRow);
+  }catch(e){return false;}
+}
+applyTheme();updateBadge();
+(async()=>{const live=await loadLive();
+ if(live&&live.length){ST=live.map(s=>{const e=EXTRA[s.name]||{};
+  return Object.assign({},s,{km:e.km??null,min:e.min??null,rate:e.rate??s.rate,rc:e.rc??s.rc,
+   x:e.x??+nx(s.lng).toFixed(1),y:e.y??+ny(s.lat).toFixed(1)});});
+  toast("Live data connected ✓");}
+ renderPanel();renderPins();})();
 </script>
 </body>
 </html>
