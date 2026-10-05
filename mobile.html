@@ -115,6 +115,11 @@
   .pin:focus .d{outline:3px solid #4ADE80;outline-offset:2px}
   /* driving mode: nothing on screen except map + nav card */
   #phone.naving #pop{display:none!important}
+  #mini{position:absolute;left:12px;right:12px;z-index:16;background:#fff;border-radius:14px;padding:10px 38px 10px 14px;
+    box-shadow:0 10px 28px rgba(15,23,42,.3);display:none;cursor:pointer}
+  #mini .mx{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:50%;
+    border:0;background:#F1F5F9;color:var(--second);font-size:13px}
+  #phone.naving #mini{display:none!important}
   #phone.naving #sheet{display:none!important}
   #phone.naving #ctl{display:none!important}
   #phone.naving .pin{opacity:.28}
@@ -147,6 +152,7 @@
   </div>
 
   <div id="pop"></div>
+  <div id="mini" onclick="if(S.sel)openPop(S.sel)"></div>
 
   <div id="sheet">
     <div id="grab"><i></i></div>
@@ -284,12 +290,13 @@ let lastTap=0;
 mapEl.addEventListener("pointerup",e=>{
  // single tap on empty map = go back: dismiss card, collapse sheet to peek
  if(Date.now()-tapT<300&&Math.hypot(e.clientX-tapX,e.clientY-tapY)<10&&ptrs.size<=1){
-  closePop();if(typeof snap!=="undefined"&&snap!==0){snap=0;renderSheet();}}
+  if(S.sel)hidePop();else closePop();
+  if(typeof snap!=="undefined"&&snap!==0){snap=0;renderSheet();}}
  const n=Date.now();if(n-lastTap<300){const r=mapEl.getBoundingClientRect();zoomBy(1.6,e.clientX-r.left,e.clientY-r.top);}lastTap=n;});
 
 /* ================= POPUP CARD (above the pin) ================= */
 function openPop(id){
-  const s=ST.find(x=>x.id===id);if(!s)return;S.sel=id;render();
+  const s=ST.find(x=>x.id===id);if(!s)return;S.sel=id;hideMini();render();
   const w=vw(),sx=(X(s.lng)-V.cx)*V.z+w/2,sy=(Y(s.lat)-V.cy)*V.z+vh()/2;
   const below=sy<200, pop=$("pop");
   pop.innerHTML=`<button class="x" onclick="closePop()">✕</button>
@@ -303,7 +310,19 @@ function openPop(id){
   pop.style.top=below?(sy+16)+"px":Math.max(86,sy-hh-30)+"px";
 }
 function positionPop(fromRender){if(S.sel&&!fromRender)openPop(S.sel);}
-function closePop(){S.sel=null;$("pop").classList.remove("on");render();}
+function closePop(){S.sel=null;$("pop").classList.remove("on");hideMini();render();}
+function hidePop(){ // card away, mini-bar stays docked, pin stays highlighted
+  const s=ST.find(x=>x.id===S.sel);$("pop").classList.remove("on");
+  if(!s){hideMini();render();return;}
+  const m=$("mini");
+  m.innerHTML=`<div style="font-weight:800;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.name}</div>
+   <div style="font-size:12px;color:var(--second)">${price(s)} · ${s.open?"Open":"Closed"} · ${s.avail}</div>
+   <button class="mx" aria-label="Clear selection" onclick="event.stopPropagation();closePop()">✕</button>`;
+  m.style.display="block";positionMini();render();
+}
+function hideMini(){$("mini").style.display="none";}
+function positionMini(){const m=$("mini");if(!m||m.style.display==="none")return;
+ m.style.bottom=($("sheet").offsetHeight+10)+"px";}
 
 /* ================= SHEET / SEARCH / STATES ================= */
 const SNAPS=[110,0.42,0.7];let snap=1;
@@ -325,6 +344,7 @@ function renderSheet(){
      <div class="pr">${price(s)}<small>${s.fuels.join(" · ")}</small></div></div>`).join("")
    :(near?`<div style="padding:22px;text-align:center;color:var(--second);font-size:14px">No stations here — try another state or fuel.</div>`
     :`<div style="padding:22px;text-align:center;color:var(--second);font-size:14px">Nothing saved yet — open a station and tap ♡ Save.</div>`);
+  positionMini();
 }
 function focusStation(id){
   const s=ST.find(x=>x.id===id);V.cx=X(s.lng);V.cy=Y(s.lat);V.z=Math.max(V.z,2.4);
