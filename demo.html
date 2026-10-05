@@ -75,7 +75,8 @@
   body.dark .st.sel{background:#0E2A1A}
   .st h4{margin:0;font-size:15px}
   .st .mt{font-size:12.5px;color:var(--second);margin-top:3px}
-  .st .ft{display:flex;align-items:center;margin-top:8px;gap:8px}
+  .st .ft{display:flex;align-items:center;margin-top:8px;gap:8px;flex-wrap:wrap}
+  .st h4{overflow-wrap:anywhere}
   .tag{font-size:10.5px;font-weight:800;letter-spacing:.05em;border-radius:6px;padding:3px 8px}
   .st .pr{margin-left:auto;font-weight:800;color:var(--primary);font-size:15px;white-space:nowrap}
   /* drawer */
@@ -165,6 +166,12 @@
       <path id="routePath" d="" stroke="#15803D" stroke-width="12" fill="none" stroke-linecap="round" opacity=".9"/>
       <path id="routeDash" d="" stroke="#fff" stroke-width="3" stroke-dasharray="2 14" fill="none" stroke-linecap="round"/>
     </svg>
+    <div id="natmap" style="display:none;position:absolute;inset:0;background:radial-gradient(circle at 50% 40%,#DCE8D8,#cfdcc9 70%)">
+      <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(15,23,42,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(15,23,42,.06) 1px,transparent 1px);background-size:44px 44px"></div>
+      <div id="natName" style="position:absolute;top:46%;width:100%;text-align:center;font-size:34px;font-weight:800;letter-spacing:.1em;color:rgba(15,23,42,.10)">NIGERIA</div>
+      <svg viewBox="0 0 800 900" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%">
+        <path id="routePathN" d="" stroke="#15803D" stroke-width="12" fill="none" stroke-linecap="round" opacity=".9"/>
+        <path id="routeDashN" d="" stroke="#fff" stroke-width="3" stroke-dasharray="2 14" fill="none" stroke-linecap="round"/></svg></div>
     <div class="me" style="left:32%;top:44%"></div>
     <div id="pins"></div>
     <div class="navb" id="navb"><div class="eta" id="navEta"></div><div class="rd" id="navRd"></div>
@@ -179,25 +186,23 @@
   </div>
 </div>
 <div id="toast"></div>
-
+<script src="data/stations.js"></script>
 <script>
-/* ---------- data ---------- */
-const ST = [
- {id:1,name:"TotalEnergies — Lekki P1",area:"Lekki",addr:"Admiralty Way, Lekki",km:2.1,min:7,fuels:["Petrol","CNG"],pp:865,unit:"/L",avail:"Available",open:true,hours:"Open 24 hrs",rate:4.2,rc:318,x:54,y:38},
- {id:2,name:"NNPC — Ikoyi Rd",area:"Ikoyi",addr:"Ikoyi Road",km:3.4,min:11,fuels:["Petrol"],pp:859,unit:"/L",avail:"Available",open:true,hours:"Open · closes 11pm",rate:4.0,rc:204,x:66,y:30},
- {id:3,name:"ChargePoint — VI Hub",area:"Victoria Island",addr:"Adeola Odeku, VI",km:4.0,min:13,fuels:["EV"],pp:310,unit:"/kWh",avail:"2/6 stalls free",open:true,hours:"Open 24 hrs",rate:4.6,rc:97,x:30,y:52},
- {id:4,name:"Mobil — Admiralty",area:"Lekki",addr:"Admiralty Way, Lekki",km:1.2,min:5,fuels:["Petrol","EV"],pp:870,unit:"/L",avail:"Petrol low",open:true,hours:"Open 24 hrs",rate:3.9,rc:411,x:22,y:24},
- {id:5,name:"CNG Express — Lekki",area:"Lekki",addr:"Chevron Drive, Lekki",km:5.2,min:16,fuels:["CNG"],pp:490,unit:"/SCM",avail:"Available",open:false,hours:"Closed · opens 6am",rate:4.4,rc:58,x:74,y:20},
- {id:6,name:"AP — Ozumba Mbadiwe",area:"Victoria Island",addr:"Ozumba Mbadiwe, VI",km:5.8,min:18,fuels:["Petrol","CNG","EV"],pp:872,unit:"/L",avail:"Available",open:true,hours:"Open 24 hrs",rate:4.1,rc:156,x:44,y:60},
- {id:7,name:"Eterna — Lekki Epe",area:"Lekki",addr:"Lekki-Epe Expressway",km:7.3,min:21,fuels:["Petrol"],pp:855,unit:"/L",avail:"Available",open:true,hours:"Open · closes 10pm",rate:3.8,rc:89,x:84,y:52},
- {id:8,name:"VoltHub — Ikoyi",area:"Ikoyi",addr:"Bourdillon Rd, Ikoyi",km:4.6,min:14,fuels:["EV"],pp:295,unit:"/kWh",avail:"4/8 stalls free",open:true,hours:"Open 24 hrs",rate:4.7,rc:64,x:56,y:16},
-];
+/* ---------- data (generated data/stations.js is the source; Lagos 8 keep demo detail via EXTRA) ---------- */
+const EXTRA={"TotalEnergies — Lekki P1":{km:2.1,min:7,x:54,y:38,rate:4.2,rc:318},"NNPC — Ikoyi Rd":{km:3.4,min:11,x:66,y:30,rate:4.0,rc:204},"ChargePoint — VI Hub":{km:4.0,min:13,x:30,y:52,rate:4.6,rc:97},"Mobil — Admiralty":{km:1.2,min:5,x:22,y:24,rate:3.9,rc:411},"CNG Express — Lekki":{km:5.2,min:16,x:74,y:20,rate:4.4,rc:58},"AP — Ozumba Mbadiwe":{km:5.8,min:18,x:44,y:60,rate:4.1,rc:156},"Eterna — Lekki Epe":{km:7.3,min:21,x:84,y:52,rate:3.8,rc:89},"VoltHub — Ikoyi":{km:4.6,min:14,x:56,y:16,rate:4.7,rc:64}};
+const nx=lng=>Math.min(95,Math.max(5,(lng-2.7)/12*100));
+const ny=lat=>Math.min(93,Math.max(7,(1-(lat-4.2)/9.7)*100));
+const ST=TANKUP_STATIONS.map(s=>{const e=EXTRA[s.name]||{};
+ return Object.assign({},s,{km:e.km??null,min:e.min??null,rate:e.rate??s.rate,rc:e.rc??s.rc,
+  x:e.x??+nx(s.lng).toFixed(1),y:e.y??+ny(s.lat).toFixed(1)});});
+const STATES=["All",...new Set(ST.map(s=>s.state))].sort((a,b)=>a==="All"?-1:b==="All"?1:a.localeCompare(b));
+const dstr=s=>s.km!=null?`${dist(s)} · ~${s.min} min`:`${s.area}, ${s.state}`;
 const FC={Petrol:"#B45309",CNG:"#075985",EV:"#5B21B6"};
 const FT={Petrol:["#FEF3C7","#B45309"],CNG:["#E0F2FE","#075985"],EV:["#EDE9FE","#5B21B6"]};
-const REV={1:[["Fast pumps, accurate meter.",5],["Queue at rush hour.",3]],3:[["Both CCS stalls worked first try.",5]],4:[["Petrol ran low on Sunday.",2]]};
+const REV={"TotalEnergies — Lekki P1":[["Fast pumps, accurate meter.",5],["Queue at rush hour.",3]],"ChargePoint — VI Hub":[["Both CCS stalls worked first try.",5]],"Mobil — Admiralty":[["Petrol ran low on Sunday.",2]]};
 /* ---------- state ---------- */
 const store=(k,v)=>v===undefined?JSON.parse(localStorage.getItem("tankup."+k)||"null"):localStorage.setItem("tankup."+k,JSON.stringify(v));
-let S={tab:"explore",q:"Lekki",fuel:"All",openOnly:false,maxKm:10,sort:"rec",sel:null,cmp:[],nav:null,
+let S={tab:"explore",q:"",fuel:"All",state:store("homestate")||"All",lga:"All",openOnly:false,maxKm:10,sort:"rec",sel:null,cmp:[],nav:null,
  saved:new Set(store("saved")||[1]),recent:store("recent")||[],profile:store("profile")||{name:"Precious",theme:"light",units:"km",voice:true,tolls:false},
  vehicles:store("vehicles")||[{n:"Work Van",t:"CNG",active:true},{n:"Personal",t:"Petrol",active:false}],
  notif:store("notif")||{price:true,avail:true,route:false}};
@@ -207,19 +212,27 @@ const price=s=>"₦"+s.pp.toLocaleString()+s.unit;
 function persist(){store("saved",[...S.saved]);store("recent",S.recent);store("profile",S.profile);store("vehicles",S.vehicles);store("notif",S.notif);}
 function toast(m){const t=$("toast");t.textContent=m;t.style.display="block";clearTimeout(t._x);t._x=setTimeout(()=>t.style.display="none",1800);}
 /* ---------- filtering ---------- */
+const natMode=()=>S.state!=="Lagos"; // Lagos keeps street detail; everything else plots on the Nigeria view
 function pool(){return ST.filter(s=>{
   const q=S.q.toLowerCase();
-  if(q && !(s.name+" "+s.addr+" "+s.area).toLowerCase().includes(q))return false;
+  if(q && !(s.name+" "+s.addr+" "+s.area+" "+s.state+" "+s.lga).toLowerCase().includes(q))return false;
+  if(S.state!=="All"&&s.state!==S.state)return false;
+  if(S.lga!=="All"&&s.lga!==S.lga)return false;
   if(S.fuel!=="All"&&!s.fuels.includes(S.fuel))return false;
   if(S.openOnly&&!s.open)return false;
-  if(s.km>S.maxKm)return false;return true;});}
+  if(s.km!=null&&s.km>S.maxKm)return false;return true;});}
 function sorted(a){const x=[...a];
   if(S.sort==="price")x.sort((p,q)=>p.pp-q.pp);
-  else if(S.sort==="dist")x.sort((p,q)=>p.km-q.km);
+  else if(S.sort==="dist")x.sort((p,q)=>(p.km??9999)-(q.km??9999));
   else x.sort((p,q)=>(q.rate+q.open*0.5)-(p.rate+p.open*0.5));return x;}
 /* ---------- map ---------- */
 function renderPins(){
   const items=pool(),ids=new Set(items.map(s=>s.id));
+  const nat=natMode();
+  $("mapsvg").style.display=nat?"none":"block";
+  $("natmap").style.display=nat?"block":"none";
+  document.querySelectorAll(".me").forEach(m=>m.style.display=nat?"none":"block");
+  if(nat)$("natName").textContent=S.state.toUpperCase();
   $("pins").innerHTML=items.map(s=>
    `<div class="pin ${S.sel===s.id?"sel":""}" style="left:${s.x}%;top:${s.y}%" onclick="select(${s.id},true)">
       <div class="d" style="background:${FC[s.fuels[0]]}"></div>
@@ -228,7 +241,7 @@ function renderPins(){
 function select(id,pushRecent){
   S.sel=(S.sel===id?null:id);
   if(id&&pushRecent){S.recent=[id,...S.recent.filter(r=>r!==id)].slice(0,10);persist();if(S.tab==="recent")renderPanel();}
-  renderPins();renderList();renderPop();
+  renderPins();if(S.tab==="explore")renderPanel();
 }
 function renderPop(){}
 /* ---------- panel ---------- */
@@ -247,14 +260,20 @@ function renderPanel(){
   if(S.tab==="profile")return renderProfile(B);
 }
 function card(s){return `<div class="st ${S.sel===s.id?"sel":""}" onclick="select(${s.id},true);openDrawer(${s.id})">
-  <h4>${s.name}</h4><div class="mt">${dist(s)} · ~${s.min} min · ${s.open?"Open":"Closed"} · ${s.avail}</div>
+  <h4>${s.name}</h4><div class="mt">${dstr(s)} · ${s.open?"Open":"Closed"} · ${s.avail}</div>
   <div class="ft">${s.fuels.map(f=>`<span class="tag" style="background:${FT[f][0]};color:${FT[f][1]}">${f.toUpperCase()}</span>`).join("")}
   <span class="pr">${price(s)}</span></div></div>`;}
+function setState(v){S.state=v;S.lga="All";S.sel=null;store("homestate",v);renderPanel();renderPins();}
+function setLga(v){S.lga=v;S.sel=null;renderPanel();renderPins();}
 function renderExplore(B){
   const items=sorted(pool());
-  $("pSub").textContent=`${items.length} station(s) · ${S.q?`“${S.q}” · `:""}${S.profile.units==="mi"?"miles":"km"}`;
+  const lgas=S.state==="All"?[]:[...new Set(ST.filter(s=>s.state===S.state).map(s=>s.lga))].sort();
+  $("pSub").textContent=`${items.length} station(s)${S.state!=="All"?` · ${S.state}`:" · Nigeria"}${S.q?` · “${S.q}”`:""} · SAMPLE DATA`;
   B.innerHTML=`
-   <div class="frow">${["All","Petrol","CNG","EV"].map(f=>`<button class="chip ${S.fuel===f?"on":""}" onclick="S.fuel='${f}';renderPanel();renderPins()">${f}</button>`).join("")}
+   <label class="lbl">MY STATE</label>
+   <select onchange="setState(this.value)">${STATES.map(t=>`<option ${S.state===t?"selected":""}>${t}</option>`).join("")}</select>
+   ${lgas.length?`<label class="lbl">LGA</label><select onchange="setLga(this.value)"><option>All</option>${lgas.map(t=>`<option ${S.lga===t?"selected":""}>${t}</option>`).join("")}</select>`:""}
+   <div class="frow" style="margin-top:12px">${["All","Petrol","CNG","EV"].map(f=>`<button class="chip ${S.fuel===f?"on":""}" onclick="S.fuel='${f}';renderPanel();renderPins()">${f}</button>`).join("")}
    <button class="chip ${S.openOnly?"on":""}" onclick="S.openOnly=!S.openOnly;renderPanel();renderPins()">Open now</button></div>
    <label class="lbl">MAX DISTANCE · ${S.maxKm} KM</label>
    <input type="range" min="2" max="10" value="${S.maxKm}" oninput="S.maxKm=+this.value;renderPanel();renderPins()">
@@ -271,23 +290,25 @@ $("q").addEventListener("input",e=>{S.q=e.target.value;S.sel=null;renderSugg();i
 function renderSugg(){
   const q=S.q.toLowerCase(),box=$("sugg");
   if(!q){box.classList.remove("on");return;}
+  const states=STATES.filter(t=>t!=="All"&&t.toLowerCase().includes(q)).map(t=>({t,s:"State",st:1}));
   const areas=[...new Set(ST.map(s=>s.area))].filter(a=>a.toLowerCase().includes(q)).map(a=>({t:a,s:"Area"}));
-  const sts=ST.filter(s=>(s.name+" "+s.addr).toLowerCase().includes(q)).slice(0,5).map(s=>({t:s.name,s:s.addr,id:s.id}));
-  const all=[...areas,...sts].slice(0,7);
-  box.innerHTML=all.length?all.map((o,i)=>`<button onclick="pickSugg(${o.id||0},'${o.t.replace(/'/g,"")}')"><span>📍</span><span>${o.t}<br><small>${o.s}</small></span></button>`).join("")
+  const sts=ST.filter(s=>(s.name+" "+s.addr+" "+s.state).toLowerCase().includes(q)).slice(0,5).map(s=>({t:s.name,s:s.addr+", "+s.state,id:s.id}));
+  const all=[...states,...areas,...sts].slice(0,7);
+  box.innerHTML=all.length?all.map((o,i)=>`<button onclick="pickSugg(${o.id||0},'${o.t.replace(/'/g,"")}',${o.st?1:0})"><span>📍</span><span>${o.t}<br><small>${o.s}</small></span></button>`).join("")
     :`<div style="padding:14px;font-size:14px;color:var(--second)">No matches for “${S.q}”.</div>`;
   box.classList.add("on");
 }
-function pickSugg(id,label){
+function pickSugg(id,label,isState){
   $("sugg").classList.remove("on");
-  if(id){select(id,true);openDrawer(id);}
+  if(id){const s=ST.find(x=>x.id===id);if(s.state!==S.state)setState(s.state);select(id,true);openDrawer(id);}
+  else if(isState){S.q="";$("q").value="";setState(label);toast(`Showing stations in ${label}`);}
   else{S.q=label;$("q").value=label;renderPanel();renderPins();toast(`Showing stations around ${label}`);}
 }
 document.addEventListener("click",e=>{if(!e.target.closest(".sbox"))$("sugg").classList.remove("on");});
 /* ---------- drawer (details) ---------- */
 function openDrawer(id){
   const s=ST.find(x=>x.id===id);if(!s)return;
-  $("dName").textContent=s.name;$("dAddr").textContent=`${s.addr} · ${dist(s)} · ~${s.min} min`;
+  $("dName").textContent=s.name;$("dAddr").textContent=`${s.addr}, ${s.lga} · ${s.state} · ${dstr(s)}`;
   const inC=S.cmp.includes(id);
   $("dBody").innerHTML=`
    <div class="tags" style="display:flex;gap:6px">${s.fuels.map(f=>`<span class="tag" style="background:${FT[f][0]};color:${FT[f][1]}">${f.toUpperCase()}</span>`).join("")}</div>
@@ -302,7 +323,7 @@ function openDrawer(id){
    <label class="lbl">COMPARE NEARBY ${S.fuel==="All"?"PETROL":S.fuel.toUpperCase()}</label>
    ${cmpTable(s)}
    <label class="lbl">REVIEWS</label>
-   ${(REV[id]||[["No reviews yet — be the first.",null]]).map(r=>`<div class="kv"><span>${r[0]}</span>${r[1]?`<span class="stars">${r[1]}★</span>`:""}</div>`).join("")}
+   ${(REV[s.name]||[["No reviews yet — be the first.",null]]).map(r=>`<div class="kv"><span>${r[0]}</span>${r[1]?`<span class="stars">${r[1]}★</span>`:""}</div>`).join("")}
    <button class="pillbtn" style="width:100%;margin-top:6px" onclick="addReview(${s.id})">Write a review</button>
    <label class="lbl">CORRECT SOMETHING?</label>
    <button class="pillbtn" style="width:100%" onclick="reportPrice(${s.id})">Report price change</button>`;
@@ -342,7 +363,7 @@ function showCmp(){
 }
 function addReview(id){
   const t=prompt("Your review:");if(!t)return;
-  const r=+(prompt("Rating 1-5:")||"5");(REV[id]=REV[id]||[]).unshift([t,Math.min(5,Math.max(1,r||5))]);
+  const r=+(prompt("Rating 1-5:")||"5");(REV[s.name]=REV[s.name]||[]).unshift([t,Math.min(5,Math.max(1,r||5))]);
   const s=ST.find(x=>x.id===id);s.rc++;toast("Review posted — thanks!");openDrawer(id);
 }
 function reportPrice(id){
@@ -352,18 +373,20 @@ function reportPrice(id){
 /* ---------- navigation ---------- */
 function startNav(id){
   const s=ST.find(x=>x.id===id);S.nav=id;closeDrawer();
-  const mx=32*8,my=44*9; // me px approx in 800x900 space
+  const nat=s.km==null; // national rows have no Lagos detail coords
+  const mx=nat?400:32*8,my=nat?800:44*9; // bottom-centre, else Lagos dot
   const dx=s.x*8,dy=s.y*9;
   const d=`M${mx} ${my} L${mx} ${dy} L${dx} ${dy}`;
-  $("routePath").setAttribute("d",d);$("routeDash").setAttribute("d",d);
-  $("navEta").textContent=`${s.min} min · ${dist(s)}`;
-  $("navRd").textContent=`To ${s.name} — voice guidance ${S.profile.voice?"on":"off"}${S.profile.tolls?" · avoiding tolls":""}`;
-  $("navSteps").innerHTML=`<div class="kv"><span>1. Head east on Admiralty Way</span><b>1.1 km</b></div>
-   <div class="kv"><span>2. Continue to destination</span><b>${dist(s)}</b></div>
+  const rp=nat?"routePathN":"routePath",rd=nat?"routeDashN":"routeDash";
+  $(rp).setAttribute("d",d);$(rd).setAttribute("d",d);
+  $("navEta").textContent=dstr(s);
+  $("navRd").textContent=`To ${s.name}, ${s.area} — voice guidance ${S.profile.voice?"on":"off"}${S.profile.tolls?" · avoiding tolls":""}`;
+  $("navSteps").innerHTML=`<div class="kv"><span>1. Head toward ${s.area}</span><b>${s.km!=null?dist(s):s.state}</b></div>
+   <div class="kv"><span>2. Continue to destination</span><b>${dstr(s)}</b></div>
    <div class="kv"><span>${s.fuels.join(" · ")}</span><b>${price(s)}</b></div>`;
   $("navb").classList.add("on");toast("Navigating — drive safe 🛣️");
 }
-function endNav(){S.nav=null;$("routePath").setAttribute("d","");$("routeDash").setAttribute("d","");$("navb").classList.remove("on");toast("Navigation ended");}
+function endNav(){S.nav=null;["routePath","routeDash","routePathN","routeDashN"].forEach(id=>$(id).setAttribute("d",""));$("navb").classList.remove("on");renderPins();toast("Navigation ended");}
 /* ---------- trips ---------- */
 function renderTrips(B){
   $("pSub").textContent="Recent and planned routes";
@@ -395,6 +418,8 @@ function renderProfile(B){
    <div class="st" style="cursor:default"><h4>${p.name}</h4><div class="mt">${S.vehicles.find(v=>v.active)?.t||""} · ${S.vehicles.find(v=>v.active)?.n||""} · Synced</div>
     <div class="frow"><button class="mini" onclick="editName()">Edit name</button>
     <button class="mini" onclick="toggleTheme()">${p.theme==="dark"?"☀️ Light mode":"🌙 Dark mode"}</button></div></div>
+   <label class="lbl">MY STATE (DEFAULT MAP VIEW)</label>
+   <select onchange="setState(this.value);renderPanel();toast('Home state: '+this.value)">${STATES.map(t=>`<option ${S.state===t?"selected":""}>${t}</option>`).join("")}</select>
    <label class="lbl">MY VEHICLES (TAP TO ACTIVATE)</label>
    ${S.vehicles.map((v,i)=>`<div class="vrow" style="${v.active?"outline:2px solid var(--primary)":""}"><div>🚐<br><small>${v.t}</small></div>
      <div><b>${v.n}</b><br><small>${v.active?"Active":"Tap Set active"}</small></div>

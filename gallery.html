@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TankUp — Design Gallery (Phase 1)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primary:#15803D; --primary-h:#166534; --accent:#16A34A; --ring:rgba(22,163,74,.16);
+    --btn-bg:#15803D; --btn-tx:#ffffff; --btn-h:#166534;
+    --ink:#0F172A; --second:#475569; --faint:#94A3B8; --line:#E8EDF3; --wash:#F4F6F9; --card:#fff;
+    --petrol:#B45309; --petrol-bg:#FEF3C7; --cng:#075985; --cng-bg:#E0F2FE; --ev:#5B21B6; --ev-bg:#EDE9FE;
+    --error:#B91C1C; --error-bg:#FEE2E2; --warn:#92400E; --warn-bg:#FEF3C7; --ok-bg:#F0FDF4;
+    --r-sm:10px; --r-md:14px; --r-lg:18px; --r-pill:999px;
+  }
+  body.dark{
+    --primary:#4ADE80; --primary-h:#86EFAC; --accent:#4ADE80; --ring:rgba(74,222,128,.22);
+    --btn-bg:#22C55E; --btn-tx:#052E16; --btn-h:#4ADE80;
+    --ink:#F1F5F9; --second:#A7B4C6; --faint:#64748B; --line:#26334D; --wash:#0B1220; --card:#141D33;
+    --petrol:#FCD34D; --petrol-bg:#3A2A0B; --cng:#7DD3FC; --cng-bg:#0B2A3A; --ev:#C4B5FD; --ev-bg:#251B4D;
+    --error:#FCA5A5; --error-bg:#3A1414; --warn:#FCD34D; --warn-bg:#3A2A0B; --ok-bg:#0C2A18}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Plus Jakarta Sans",-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--wash);color:var(--ink)}
+  .top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:14px 22px;background:var(--card);border-bottom:1px solid var(--line)}
+  .logo{font-weight:800;font-size:18px}.logo span{color:var(--accent)}
+  .top .sp{flex:1}
+  .pillbtn{font-family:inherit;border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;
+    padding:9px 18px;font-size:13.5px;font-weight:700;cursor:pointer}
+  .pillbtn:hover{border-color:var(--primary)}
+  .wrap{max-width:1020px;margin:0 auto;padding:28px 22px 70px}
+  .hero h1{margin:0;font-size:clamp(28px,4.5vw,40px);letter-spacing:-.02em}
+  .hero p{color:var(--second);font-size:16px;max-width:64ch}
+  section{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:26px;margin-top:20px}
+  .no{font-size:11.5px;font-weight:800;letter-spacing:.15em;color:var(--second)}
+  h2{margin:8px 0 4px;font-size:21px}.sub{color:var(--second);font-size:14.5px;margin:0 0 18px;max-width:66ch}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  .sw{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .sw .c{height:58px}.sw .t{padding:9px 11px;font-size:12px;color:var(--second)}
+  .sw .t b{display:block;font-size:13.5px;color:var(--ink)}.sw code,.mono{font-family:"JetBrains Mono",monospace}
+  .t-d{font-size:32px;font-weight:800;letter-spacing:-.02em;margin:8px 0}
+  .t-t{font-size:22px;font-weight:700;margin:8px 0}.t-b{font-size:16.5px;line-height:1.6;margin:8px 0}
+  .t-c{font-size:13.5px;color:var(--second);margin:8px 0}
+  .sp-row{display:flex;gap:8px;align-items:flex-end;margin:10px 0}
+  .sp-block{background:var(--primary);border-radius:6px}
+  .btn{font-family:inherit;display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;
+    padding:0 26px;min-height:52px;font-size:16px;font-weight:800;cursor:pointer;border:1px solid transparent;
+    transition:background .15s,transform .1s,box-shadow .15s}
+  .btn-p{background:var(--btn-bg);color:var(--btn-tx);box-shadow:0 1px 2px rgba(21,128,61,.35)}
+  .btn-p:hover{background:var(--btn-h)}
+  body.dark .btn-p{box-shadow:0 0 18px rgba(34,197,94,.35)}
+  body.dark .btn-p:hover{box-shadow:0 0 26px rgba(74,222,128,.45)}
+  body.dark .chip.on{background:#F1F5F9;color:#0F172A;border-color:#F1F5F9}
+  body.dark section{box-shadow:0 12px 40px rgba(0,0,0,.35)}
+  body.dark .dot{border-color:#1E293B}
+  .btn-p:active{transform:translateY(1px)}
+  .btn-p:focus-visible,.btn-q:focus-visible,.chip:focus-visible,.field:focus-visible{outline:3px solid var(--ring);outline-offset:2px}
+  .btn-q{background:var(--card);color:var(--ink);border-color:var(--line)}
+  .btn-q:hover{background:var(--wash)}
+  .btn-sm{min-height:44px;padding:0 20px;font-size:14px}
+  .btn[disabled]{opacity:.45;cursor:not-allowed;box-shadow:none}
+  .btnrow{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0}
+  .field{font-family:inherit;width:100%;padding:13px 15px;font-size:15.5px;color:var(--ink);border:1.5px solid var(--line);
+    border-radius:12px;background:var(--card)}
+  .field::placeholder{color:var(--faint)}.field:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--ring)}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .chip{font-family:inherit;border-radius:999px;padding:9px 17px;font-size:13.5px;font-weight:700;border:1.5px solid var(--line);
+    background:var(--card);color:var(--ink);cursor:pointer}
+  .chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .card{border:1px solid var(--line);border-radius:16px;padding:18px;max-width:420px}
+  .card h3{margin:0;font-size:18px}.meta{font-size:13.5px;color:var(--second);margin-top:5px}
+  .tags{display:flex;gap:6px;margin-top:10px}
+  .tag{font-size:11px;font-weight:800;letter-spacing:.05em;border-radius:6px;padding:3px 9px}
+  .price{font-size:24px;font-weight:800;margin-top:10px}.price small{font-size:13px;font-weight:600;color:var(--second)}
+  .markers{display:flex;gap:20px;margin-top:14px;flex-wrap:wrap}
+  .marker{display:flex;align-items:center;gap:9px;font-weight:700;font-size:14px}
+  .dot{width:24px;height:24px;border-radius:50% 50% 50% 4px;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+  .dot.closed{filter:grayscale(1);opacity:.55}
+  .sheetmock{border:1px solid var(--line);border-radius:18px;overflow:hidden;max-width:420px;background:var(--card)}
+  .grab{width:44px;height:5px;border-radius:99px;background:var(--line);margin:10px auto 2px}
+  .srow{display:flex;gap:11px;align-items:center;padding:11px 14px;border-top:1px solid var(--line);font-size:14px}
+  .srow:first-of-type{border-top:0}
+  .rdot{width:13px;height:13px;border-radius:50% 50% 50% 3px;transform:rotate(-45deg);flex-shrink:0}
+  .swrow{display:flex;align-items:center;justify-content:space-between;font-size:14.5px;font-weight:600;padding:11px 0;border-top:1px solid var(--line);max-width:420px}
+  .sw{width:46px;height:27px;border-radius:999px;border:0;background:#CBD5E1;cursor:pointer;position:relative;flex-shrink:0;padding:0}
+  .sw::after{content:"";position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:50%;background:#fff;transition:left .15s}
+  .sw.on{background:var(--primary)}.sw.on::after{left:22px}
+  .banner{border-radius:12px;padding:12px 15px;font-size:14px;font-weight:600;margin:8px 0;max-width:560px}
+  .skeleton{border-radius:10px;background:linear-gradient(90deg,#DFE6EF 25%,#F7FAFD 50%,#DFE6EF 75%);
+    background-size:200% 100%;animation:sh 1.4s infinite}
+  body.dark .skeleton{background:linear-gradient(90deg,#26334D 25%,#101A30 50%,#26334D 75%);background-size:200% 100%}
+  @keyframes sh{to{background-position:-200% 0}}
+  .rules{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:6px}
+  .rule{border:1px solid var(--line);border-radius:12px;padding:13px 14px;font-size:13.5px}
+  .rule b{display:block;font-size:14px;margin-bottom:3px}.rule span{color:var(--second)}
+  .rule .ok{color:var(--primary);font-weight:800}
+  footer{max-width:1020px;margin:0 auto;padding:0 22px 46px;color:var(--second);font-size:13px}
+</style>
+</head>
+<body>
+<div class="top"><div class="logo">TankUp <span>· Design Gallery</span></div><div class="sp"></div>
+  <button class="pillbtn" onclick="document.body.classList.toggle('dark');this.textContent=document.body.classList.contains('dark')?'☀️ Light':'🌙 Dark'">🌙 Dark</button></div>
+<div class="wrap">
+  <div class="hero"><h1>Every token, every component.</h1>
+    <p>Phase 1 gallery — toggle dark mode above to approve both themes. Tap targets ≥ 44px, text contrast ≥ 4.5:1, body never below 16px.</p></div>
+
+  <section><div class="no">01 — COLOR TOKENS</div><h2>Palette with passing pairs</h2>
+    <p class="sub">Buttons use action green; bright green is accent-only. Energy tags are dark-text-on-tint.</p>
+    <div class="grid">
+      <div class="sw"><div class="c" style="background:#15803D"></div><div class="t"><b>action</b><code>#15803D</code> · white 5.0:1</div></div>
+      <div class="sw"><div class="c" style="background:#16A34A"></div><div class="t"><b>accent</b><code>#16A34A</code> · graphics only</div></div>
+      <div class="sw"><div class="c" style="background:#FEF3C7"></div><div class="t"><b>petrol tint</b><code>#FEF3C7</code> / <code>#92400E</code></div></div>
+      <div class="sw"><div class="c" style="background:#E0F2FE"></div><div class="t"><b>cng tint</b><code>#E0F2FE</code> / <code>#075985</code></div></div>
+      <div class="sw"><div class="c" style="background:#EDE9FE"></div><div class="t"><b>ev tint</b><code>#EDE9FE</code> / <code>#5B21B6</code></div></div>
+      <div class="sw"><div class="c" style="background:#0F172A"></div><div class="t"><b>ink</b><code>#0F172A</code></div></div>
+      <div class="sw"><div class="c" style="background:#475569"></div><div class="t"><b>secondary</b><code>#475569</code> · 7.5:1</div></div>
+      <div class="sw"><div class="c" style="background:#B91C1C"></div><div class="t"><b>error</b><code>#B91C1C</code></div></div>
+    </div></section>
+
+  <section><div class="no">02 — TYPOGRAPHY</div><h2>Plus Jakarta Sans, four sizes</h2>
+    <p class="sub">Tight headings, relaxed body. Caption carries metadata only.</p>
+    <div class="t-d">Find fuel near Lekki</div>
+    <div class="t-t">TotalEnergies, Lekki Phase 1</div>
+    <div class="t-b">2.1 km away · ~7 min · Petrol ₦865/L · Available. Body never drops below 16px — readable at arm's length while parked.</div>
+    <div class="t-c">Updated 5 min ago · Open 24 hrs · 4.2 (318 reviews)</div></section>
+
+  <section><div class="no">03 — SPACING &amp; RADII</div><h2>4-pt rhythm</h2>
+    <p class="sub">Base unit 4 · section rhythm 8 / 16 / 24 · radii 10 / 14 / 18 / pill.</p>
+    <div class="sp-row"><div class="sp-block" style="width:24px;height:24px"></div><div class="sp-block" style="width:32px;height:32px"></div><div class="sp-block" style="width:48px;height:48px"></div><div class="sp-block" style="width:72px;height:72px"></div><div class="t-c">4 · 8 · 12 · 18 (×4 base)</div></div>
+    <div class="sp-row"><div style="width:90px;height:44px;background:var(--wash);border:1px solid var(--line);border-radius:10px"></div><div style="width:90px;height:44px;background:var(--wash);border:1px solid var(--line);border-radius:14px"></div><div style="width:90px;height:44px;background:var(--wash);border:1px solid var(--line);border-radius:18px"></div><div style="width:90px;height:44px;background:var(--wash);border:1px solid var(--line);border-radius:999px"></div></div></section>
+
+  <section><div class="no">04 — BUTTONS</div><h2>One loud action, one quiet</h2>
+    <p class="sub">Primary for driving-critical actions only. Focus rings visible for keyboard / switch users.</p>
+    <div class="btnrow"><button class="btn btn-p">Get Directions →</button><button class="btn btn-q">Save station</button></div>
+    <div class="btnrow"><button class="btn btn-p btn-sm">Get Directions</button><button class="btn btn-q btn-sm">Details</button><button class="btn btn-p btn-sm" disabled>Locating…</button></div></section>
+
+  <section><div class="no">05 — INPUTS</div><h2>Search that stays out of the way</h2>
+    <p class="sub">Green glow on focus only. 16px text so mobile keyboards never zoom.</p>
+    <input class="field" value="Lekki" aria-label="Search demo">
+    <div class="chips"><span class="chip on">Petrol</span><span class="chip on">CNG</span><span class="chip">EV</span><span class="chip">Open now</span><span class="chip">≤ 5 km</span></div></section>
+
+  <section><div class="no">06 — STATION CARD + SHEET</div><h2>Price first, everything else second (PRD §8)</h2>
+    <p class="sub">Card for selection; bottom-sheet rows for scanning.</p>
+    <div class="card"><h3>TotalEnergies — Lekki Phase 1</h3><div class="meta">2.1 km · ~7 min · Open 24 hrs</div>
+      <div class="tags"><span class="tag" style="background:var(--petrol-bg);color:var(--petrol)">PETROL</span><span class="tag" style="background:var(--cng-bg);color:var(--cng)">CNG</span></div>
+      <div class="price">₦865/L <small>· Available · updated 5 min ago</small></div>
+      <div class="meta">4.2 ★ (318 reviews) · Admiralty Way, Lekki</div>
+      <div class="btnrow" style="margin-top:14px"><button class="btn btn-p btn-sm">Get Directions</button><button class="btn btn-q btn-sm">Details</button></div></div>
+    <div class="sheetmock" style="margin-top:14px"><div class="grab"></div>
+      <div class="srow"><span class="rdot" style="background:#B45309"></span><span><b>NNPC — Ikoyi Rd</b><br><span class="meta">3.4 km · Available</span></span><b style="margin-left:auto;color:var(--primary)">₦859/L</b></div>
+      <div class="srow"><span class="rdot" style="background:#5B21B6"></span><span><b>ChargePoint — VI Hub</b><br><span class="meta">4.0 km · 2/6 stalls free</span></span><b style="margin-left:auto;color:var(--primary)">₦310/kWh</b></div></div></section>
+
+  <section><div class="no">07 — MAP MARKERS</div><h2>Three energies + closed state</h2>
+    <p class="sub">Hue + shape carry meaning; closed stations desaturate. Distinguishable in sunlight without reading labels.</p>
+    <div class="markers">
+      <span class="marker"><span class="dot" style="background:#B45309"></span>Petrol</span>
+      <span class="marker"><span class="dot" style="background:#075985"></span>CNG</span>
+      <span class="marker"><span class="dot" style="background:#5B21B6"></span>EV</span>
+      <span class="marker"><span class="dot closed" style="background:#64748B"></span>Closed</span>
+      <span class="marker"><span style="width:18px;height:18px;border-radius:50%;background:#2563EB;border:4px solid #fff;box-shadow:0 0 0 8px rgba(37,99,235,.18)"></span>You</span>
+    </div></section>
+
+  <section><div class="no">08 — TOGGLES &amp; FEEDBACK</div><h2>Settings, banners, loading</h2>
+    <p class="sub">§27 controls plus system states: offline, empty, loading.</p>
+    <div class="swrow">Voice guidance<button class="sw on" onclick="this.classList.toggle('on')"></button></div>
+    <div class="swrow">Avoid tolls<button class="sw" onclick="this.classList.toggle('on')"></button></div>
+    <div class="banner" style="background:var(--error-bg);color:var(--error)">⚠ You're offline — showing saved stations. Changes will sync.</div>
+    <div class="banner" style="background:var(--ok-bg);color:var(--primary)">✓ All changes synced.</div>
+    <div class="skeleton" style="height:64px;max-width:420px"></div>
+    <div class="t-c" style="margin-top:8px">Loading shimmer · empty states use centered muted copy + one action.</div></section>
+
+  <section><div class="no">09 — TURN-BY-TURN STEPS</div><h2>One instruction at a time (PRD §13)</h2>
+    <p class="sub">Google-style sequencing, hands-free: steps auto-advance like live GPS guidance — no taps while driving. Finished steps collapse to ✓, arrival gets its own card. Try the dark toggle — all states hold.</p>
+    <div class="card" style="background:#0F172A;border-color:#0F172A;color:#fff;max-width:380px">
+      <div style="font-size:22px;font-weight:800">7 min · 2.1 km</div>
+      <div class="meta" style="color:#B6C0CE">Step 1 of 2 · to TotalEnergies</div>
+      <div style="margin-top:10px;border-top:1px solid rgba(255,255,255,.14)">
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:9px 10px;background:rgba(74,222,128,.12);border-radius:10px;margin-top:8px"><span>1. Head toward Lekki</span><span style="font-size:12px;font-weight:800;color:#4ADE80">● LIVE</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:9px 2px;color:#D6DEE8"><span>2. Arrive at TotalEnergies</span><b>Open</b></div></div>
+      <div style="background:rgba(255,255,255,.08);border-radius:12px;padding:10px 12px;margin-top:10px;font-size:13px"><b>TotalEnergies — Lekki P1</b> <span style="color:#B6C0CE">· Petrol · CNG</span><div style="color:#4ADE80;font-weight:800;font-size:15px;margin-top:2px">₦865/L <span style="color:#B6C0CE;font-weight:600;font-size:12px">· Available · Open 24 hrs · 4.2 ★</span></div></div>
+      <div style="background:rgba(74,222,128,.14);border:1px solid rgba(74,222,128,.4);border-radius:12px;padding:12px;font-size:14px;font-weight:700;margin-top:10px">🎉 Arrival state — shown after the last step is done.</div>
+    </div></section>
+
+  <section><div class="no">10 — RULES CHECKLIST</div><h2>Sign-off gate (exit criteria)</h2>
+    <div class="rules">
+      <div class="rule"><b>Tap targets</b><span>≥ 44px everywhere · <span class="ok">✓ pass</span></span></div>
+      <div class="rule"><b>Contrast</b><span>Text ≥ 4.5:1, large ≥ 3:1 · <span class="ok">✓ pass</span></span></div>
+      <div class="rule"><b>Body size</b><span>Never below 16px · <span class="ok">✓ pass</span></span></div>
+      <div class="rule"><b>Sunlight test</b><span>Approve on a real phone outdoors · <b>☐ pending you</b></span></div>
+      <div class="rule"><b>Markers</b><span>Distinct without labels · <span class="ok">✓ pass</span></span></div>
+      <div class="rule"><b>Driving safety</b><span>One loud action per screen · <span class="ok">✓ pass</span></span></div>
+    </div></section>
+</div>
+<footer>Phase 1 gallery · tokens → <span class="mono">lib/design/tokens.dart</span> at scaffold time · approve with the dark toggle, then reply with changes.</footer>
+</body>
+</html>

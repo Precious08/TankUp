@@ -44,9 +44,14 @@ Exit: `git status` clean, `.gitignore` present, branch plan written in README, k
 
 ---
 
-## Phase 1 — Design system (before any feature UI)
+## Phase 1 — Design system (before any feature UI) — DONE (pending sunlight sign-off)
 
 Goal: every screen looks like TankUp from day one. Maps PRD §24 (simple, fast, safety-conscious).
+
+- [x] Tokens in `lib/design/tokens.dart` (color, type, spacing, radii — gallery-mirrored, AA-checked).
+- [x] Gallery in `gallery.html` (9 sections: color, type, spacing, buttons, inputs, card+sheet, markers, toggles/banners/loading, rules checklist) with working light+dark toggle.
+- [x] Contrast pass: action green #15803D/white 5.0:1, secondary #475569 7.5:1, dark-mode flips (luminous tags, glowing primary button), dedicated light shimmer gradient.
+- [ ] Sunlight sign-off: approve gallery + markers on a real phone outdoors (owner task).
 
 1. **Tokens** (`lib/design/tokens.dart` or equivalent):
    - Colors: primary (energy green), Petrol/CNG/EV marker colors (3 distinct, colorblind-safe), surface, error, warning (closed/no-fuel states). Light + dark values.
@@ -61,9 +66,9 @@ Exit: gallery screen approved on a real phone in sunlight; markers distinguishab
 
 ---
 
-## Phase 2 — Architecture decisions
+## Phase 2 — Architecture decisions — DONE
 
-Goal: no rework later. Write one-page ADRs in `docs/adr/`.
+Goal: no rework later. One-page ADRs in `docs/adr/` — all five accepted:
 
 1. `001-stack.md` — final stack (see table above).
 2. `002-app-structure.md` — feature-first folders: `features/{home,search,saved,trips,profile,stations,navigation}/…` + `core/{network,location,storage,design}/…`.
@@ -75,9 +80,14 @@ Exit: 5 ADRs merged; folder skeleton exists with no dead code.
 
 ---
 
-## Phase 3 — Data model + API contract
+## Phase 3 — Data model + API contract — DONE
 
 Goal: backend and app agree before coding (§27.9).
+
+- [x] Schema in `supabase/migrations/0001_schema.sql` (9 tables, PostGIS geo, one-active-vehicle guard, `updated_at` triggers, full RLS, `avatars` bucket ≤5MB).
+- [x] Seed in `supabase/seed.sql` (wave 1: 30 Lagos stations, mixed fuels/prices/availability).
+- [x] National scope: `state/lga/lcda` on stations (`0002_coverage.sql` + Lagos backfill); rollout waves + gates in `supabase/seed-national.md` (36 states + FCT, every LGA/LCDA).
+- [x] Contract in `docs/api/contract.md` (endpoints, avatar flow, validation, RLS summary).
 
 Tables (Supabase Postgres):
 - `drivers(id, display_name, avatar_url, phone, email, created_at)`
@@ -130,6 +140,8 @@ Exit: app launches cold to map tab <2s on mid-range Android; onboarding completa
 ## Phase 6 — Discovery: map, search, filters, card, details, compare (PRD §6–§11)
 
 Goal: Open → Find → Compare → Choose.
+
+Surface strategy (decided): `mobile.html` is the lead device surface — new features land there first. `demo.html` is the desktop showcase and feature reference (compare tray, reviews, trips planner live there until ported).
 
 - Home map: user dot, station markers (3 types), re-center button, bottom sheet (nearby list + quick filters + saved/recent).
 - Search: station/area/street/destination; "Lekki" returns stations around Lekki.

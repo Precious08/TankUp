@@ -1,0 +1,10 @@
+# Lock line endings so the LF/CRLF warnings never come back.
+* text=auto eol=lf
+
+# Never corrupt binary assets.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.keystore binary
+*.jks binary

@@ -26,13 +26,19 @@ Answer: **"Where can I get the energy I need, how much will it cost, and how do 
 ```
 TankUp/
 ├── README.md
-├── design.html          # design system preview (open in browser)
-├── prototype.html       # clickable phone mockup
-├── demo.html            # full interactive web demo
+├── demo.html            # full interactive web demo (Lagos showcase)
+├── mobile.html          # mobile-first demo: the lead product surface
+├── gallery.html         # design system gallery (open in browser)
+├── data/stations.js     # generated station data (see scripts/)
 ├── .env.example         # copy to .env (never commit real keys)
+├── lib/design/          # Flutter design tokens (Phase 1)
+├── supabase/            # schema, seeds, runbook (source of truth)
 └── docs/
     ├── TankUp-PRD.md
-    └── Implementation-Plan.md
+    ├── Implementation-Plan.md
+    ├── api/contract.md
+    ├── adr/              # architecture decisions
+    └── archive/          # retired demos (design.html, prototype.html)
 ```
 
 ## Branches
@@ -68,10 +74,13 @@ Every driver can change anything they own from Profile, no support needed:
 
 ## Status
 
-- [x] PRD v1 with §27 dashboard/backend
-- [ ] Architecture / data model
-- [ ] API contract
-- [ ] App scaffold (TBD: Flutter / React Native / native)
+- [x] PRD v1 with §27 dashboard/backend (+ §28 tooling, §29 design changelog)
+- [x] Phase 0 repo hygiene (gitignore, env example, branches)
+- [x] Phase 1 design system (gallery.html + lib/design/tokens.dart, light+dark)
+- [x] Phase 2 architecture (5 ADRs in docs/adr: stack, structure, data flow, auth, maps)
+- [x] Phase 3 data model + API contract (supabase/ schema + seed, docs/api/contract.md)
+- [ ] Backend build (Phase 4 — next: live Supabase project)
+- [ ] App scaffold (Flutter + Supabase + Mapbox, per plan)
 - [ ] MVP build
 
 ## Next steps
