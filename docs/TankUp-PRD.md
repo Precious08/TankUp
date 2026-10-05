@@ -696,3 +696,13 @@ Live preview: `design.html` (repo root). Tokens feed Phase 1 (`lib/design/tokens
 * Loading shimmer given its own gradient after dark looked better than light.  
 * Tokens extracted to code (`lib/design/tokens.dart`) so the Flutter scaffold (Phase 5) consumes them directly — no re-spec needed.
 
+---
+
+# **30\. National Coverage — 36 States + FCT, Every LGA/LCDA**
+
+TankUp is a national product. It covers **all 36 states and the FCT**, down to **every LGA and LCDA** — not Lagos alone.
+
+* Every station record carries `state`, `lga`, and `lcda` (schema migration `0002_coverage.sql`). Search, filters, and route discovery all accept a state/LGA scope (§6, §7, §12).  
+* Rollout is waved, not big-bang: Lagos first (proves the pipeline), then Oyo, Ogun, Rivers, Kano, and FCT, then remaining states by real driver demand. Strategy and quality gates live in `supabase/seed-national.md`.  
+* A state/LGA ships only when its busiest LGAs are mapped well enough to trust — a thin national spread that misleads drivers is worse than a smaller honest footprint. Coverage depth per state is shown in-app so drivers know what to expect.
+

@@ -48,7 +48,7 @@ driver's id (RLS rejects it anyway).
 
 ## Stations (public catalogue)
 
-- `GET /stations?select=*` + filters: `area=eq.Lekki`, `fuels=cs.{Petrol}`, `is_open=is.true`.
+- `GET /stations?select=*` + filters: `state=eq.Lagos`, `lga=eq.Eti-Osa`, `area=eq.Lekki`, `fuels=cs.{Petrol}`, `is_open=is.true`.
 - Nearby: `order=location.desc&...` with PostGIS `ST_DWithin` via RPC `nearby_stations(lat,lng,radius_m)` (to be added with backend build; MVP reads seed + client-side distance).
 - Write: service role only. Community price reports land in a moderation queue (Phase 9), never direct PATCH.
 
