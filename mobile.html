@@ -120,6 +120,19 @@
   #mini .mx{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:50%;
     border:0;background:#F1F5F9;color:var(--second);font-size:13px}
   #phone.naving #mini{display:none!important}
+  /* Google-style bottom place card */
+  #place{position:absolute;left:0;right:0;bottom:0;z-index:30;background:#fff;border-radius:22px 22px 0 0;
+    box-shadow:0 -10px 34px rgba(15,23,42,.25);display:none;flex-direction:column;max-height:74%}
+  #place.on{display:flex}
+  #pgrab{padding:10px 0 2px;touch-action:none;cursor:grab}
+  #pgrab i{display:block;width:46px;height:5px;border-radius:99px;background:#E2E8F0;margin:0 auto}
+  #pbody{overflow-y:auto;padding:2px 18px calc(18px + env(safe-area-inset-bottom))}
+  #pbody h3{margin:8px 40px 0 0;font-size:20px}
+  .picrow{position:absolute;top:34px;right:14px;display:flex;gap:8px}
+  .picrow button{width:38px;height:38px;border-radius:50%;border:0;background:#F1F5F9;font-size:16px;color:var(--ink)}
+  .picrow button.on{background:#F0FDF4;color:var(--primary)}
+  .pact{display:flex;gap:8px;margin:14px 0 4px}
+  .pact .btn{min-height:48px;font-size:14px}
   #phone.naving #sheet{display:none!important}
   #phone.naving #ctl{display:none!important}
   #phone.naving .pin{opacity:.28}
@@ -152,7 +165,8 @@
   </div>
 
   <div id="pop"></div>
-  <div id="mini" onclick="if(S.sel)openPop(S.sel)"></div>
+  <div id="mini" onclick="if(S.sel)openDetails(S.sel)"></div>
+  <div id="place"><div id="pgrab"><i></i></div><div id="pbody"></div></div>
 
   <div id="sheet">
     <div id="grab"><i></i></div>
@@ -296,7 +310,7 @@ mapEl.addEventListener("pointerup",e=>{
 
 /* ================= POPUP CARD (above the pin) ================= */
 function openPop(id){
-  const s=ST.find(x=>x.id===id);if(!s)return;S.sel=id;hideMini();render();
+  const s=ST.find(x=>x.id===id);if(!s)return;closeDetails();S.sel=id;hideMini();render();
   const w=vw(),sx=(X(s.lng)-V.cx)*V.z+w/2,sy=(Y(s.lat)-V.cy)*V.z+vh()/2;
   const below=sy<200, pop=$("pop");
   pop.innerHTML=`<button class="x" onclick="closePop()">✕</button>
@@ -393,26 +407,44 @@ function closeVeil(){$("veil").classList.remove("on");}
 
 /* ================= DETAILS + NAV ================= */
 function openDetails(id){
-  const s=ST.find(x=>x.id===id);closePop();
+  const s=ST.find(x=>x.id===id);if(!s)return;S.sel=id;closePop();hideMini();
   const key=s.fuels.includes("Petrol")?"Petrol":s.fuels[0];
   const rows=ST.filter(x=>x.state===s.state&&x.fuels.includes(key)&&x.open).sort((a,b)=>a.pp-b.pp).slice(0,3);
   const best=rows.length?Math.min(...rows.map(r=>r.pp)):s.pp;
-  $("veilCard").innerHTML=`
+  $("pbody").innerHTML=`
    <h3>${s.name}</h3><p>${s.addr}, ${s.lga} · ${s.state} · ${dstr(s)}</p>
+   <div class="picrow">
+    <button aria-label="Save" class="${S.saved.has(id)?"on":""}" onclick="toggleSave(${s.id})">${S.saved.has(id)?"♥":"♡"}</button>
+    <button aria-label="Share" onclick="shareStation(${s.id})">⤴</button>
+    <button aria-label="Close" onclick="closeDetails()">✕</button></div>
    <div style="display:flex;gap:6px;margin:10px 0">${s.fuels.map(f=>`<span class="tag" style="background:${FT[f][0]};color:${FT[f][1]}">${f.toUpperCase()}</span>`).join("")}</div>
    <div style="font-size:28px;font-weight:800">${price(s)}</div>
    <div class="kv"><span>Availability</span><b>${s.avail}</b></div>
    <div class="kv"><span>Hours</span><b>${s.hours}</b></div>
    <div class="kv"><span>Rating</span><b>${s.rate} ★ (${s.rc})</b></div>
-   <button class="bigbtn" style="background:var(--primary);color:#fff" onclick="startNav(${s.id})">Get Directions</button>
-   <button class="bigbtn ghost" onclick="toggleSave(${s.id})">${S.saved.has(id)?"♥ Saved — tap to remove":"♡ Save station"}</button>
+   <div class="pact"><button class="btn btn-p" onclick="startNav(${s.id})">Directions</button>
+    <button class="btn btn-q" onclick="toggleSave(${s.id})">${S.saved.has(id)?"♥ Saved":"♡ Save"}</button></div>
    <h3 style="font-size:16px;margin-top:14px">Compare in ${s.state}</h3>
    <table style="width:100%;border-collapse:collapse;font-size:13px">${rows.map(r=>
     `<tr><td style="padding:8px 0;border-top:1px solid var(--line)">${r.name.split("—")[0].trim()}</td>
-     <td style="text-align:right;font-weight:800;${r.pp===best?"color:var(--primary)":""}">${price(r)}</td></tr>`).join("")}</table>
-   <button class="bigbtn ghost" onclick="closeVeil()">Close</button>`;
-  $("veil").classList.add("on");
+     <td style="text-align:right;font-weight:800;${r.pp===best?"color:var(--primary)":""}">${price(r)}</td></tr>`).join("")}</table>`;
+  $("place").classList.add("on");$("sheet").style.display="none";render();
 }
+function closeDetails(){$("place").classList.remove("on");$("sheet").style.display="";
+ if(S.sel)hidePop();else{render();renderSheet();}}
+function shareStation(id){const s=ST.find(x=>x.id===id);
+ const txt=`${s.name} — ${price(s)} · ${s.avail} (${s.addr}, ${s.state}) via TankUp`;
+ if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(
+  ()=>toast("Copied — paste it anywhere"),()=>toast(txt));
+ else toast(txt);}
+// drag the place handle down to dismiss
+(()=>{const g=$("pgrab");if(!g)return;let y0=0,moved=false;
+ g.addEventListener("pointerdown",e=>{e.preventDefault();y0=e.clientY;moved=false;
+  try{g.setPointerCapture(e.pointerId);}catch(_){}
+  const mv=ev=>{if(ev.clientY-y0>14)moved=true;};
+  const up=()=>{if(moved)closeDetails();
+   g.removeEventListener("pointermove",mv);g.removeEventListener("pointerup",up);g.removeEventListener("pointercancel",up);};
+  g.addEventListener("pointermove",mv);g.addEventListener("pointerup",up);g.addEventListener("pointercancel",up);});})();
 function toggleSave(id){S.saved.has(id)?S.saved.delete(id):S.saved.add(id);
  store("saved",[...S.saved]);renderSheet();toast(S.saved.has(id)?"Saved ♥":"Removed");openDetails(id);}
 function speak(t){try{
@@ -486,7 +518,7 @@ function buildSteps(path,s){
   return {steps,total};
 }
 function startNav(id,quiet){
-  const s=ST.find(x=>x.id===id);S.nav=id;closeVeil();closePop();
+  const s=ST.find(x=>x.id===id);S.nav=id;closeVeil();closePop();closeDetails();
   const o=S.pos?{lng:S.pos.lng,lat:S.pos.lat}:w2ll(V.cx,V.cy+(vh()/2)/V.z);
   const B=gridFor(o,s),nodes=astar(B,snapN(B,o),snapN(B,s));
   const path=[o,...nodes.slice(1,-1),{lng:s.lng,lat:s.lat}];
