@@ -72,7 +72,8 @@ Every driver can change anything they own from Profile, no support needed:
 - [x] Phase 0 repo hygiene (gitignore, env example, branches)
 - [x] Phase 1 design system (gallery.html + lib/design/tokens.dart, light+dark)
 - [x] Phase 2 architecture (5 ADRs in docs/adr: stack, structure, data flow, auth, maps)
-- [ ] Data model + API contract (Phase 3 — next)
+- [x] Phase 3 data model + API contract (supabase/ schema + seed, docs/api/contract.md)
+- [ ] Backend build (Phase 4 — next: live Supabase project)
 - [ ] App scaffold (Flutter + Supabase + Mapbox, per plan)
 - [ ] MVP build
 
