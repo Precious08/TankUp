@@ -109,6 +109,9 @@
   #toast{position:absolute;bottom:120px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:13.5px;
     font-weight:600;border-radius:999px;padding:11px 20px;z-index:60;display:none;white-space:nowrap;box-shadow:0 10px 30px rgba(0,0,0,.35)}
   .me-pulse{position:absolute;border-radius:50%;background:rgba(37,99,235,.15);transform:translate(-50%,-50%);z-index:3}
+  button:focus-visible,[tabindex]:focus-visible,input:focus-visible{outline:3px solid #4ADE80;outline-offset:2px}
+  .pin:focus{outline:none}
+  .pin:focus .d{outline:3px solid #4ADE80;outline-offset:2px}
   /* driving mode: nothing on screen except map + nav card */
   #phone.naving #pop{display:none!important}
   #phone.naving #sheet{display:none!important}
@@ -121,7 +124,7 @@
 </head>
 <body>
 <div id="phone">
-  <div id="map">
+  <div id="map" role="application" tabindex="0" aria-label="Station map. Arrow keys pan, plus and minus zoom. Tab reaches station pins.">
     <svg id="base" width="0" height="0"><g id="world"></g></svg>
     <div id="pins"></div>
     <div id="meDot" style="display:none"></div>
@@ -137,9 +140,9 @@
   </header>
 
   <div id="ctl">
-    <button onclick="zoomBy(1.4)">+</button>
-    <button onclick="zoomBy(1/1.4)">−</button>
-    <button onclick="recenter()">◎</button>
+    <button aria-label="Zoom in" onclick="zoomBy(1.4)">+</button>
+    <button aria-label="Zoom out" onclick="zoomBy(1/1.4)">−</button>
+    <button aria-label="Back to my area" onclick="recenter()">◎</button>
   </div>
 
   <div id="pop"></div>
@@ -150,7 +153,8 @@
     <div id="list"></div>
   </div>
 
-  <div id="navb">
+  <div id="navb" aria-live="polite" aria-label="Navigation guidance">
+    <div style="font-size:10px;font-weight:800;letter-spacing:.12em;color:#7D8AA0">DEMO · SIMULATED MOVEMENT, NOT GPS</div>
     <div class="eta" id="navEta"></div><div class="navsub" id="navRd"></div>
     <div id="navSteps"></div>
     <div id="navSt"></div>
@@ -203,16 +207,27 @@ function drawBase(){
   s+=`<path id="routePath" d="" stroke="#15803D" stroke-width="14" fill="none" stroke-linecap="round"/>`;
   world.innerHTML=s;
 }
+let pinSig="", pinById=new Map();
 function render(){
   const w=vw(),h=vh();
   base.style.width=w+"px";base.style.height=h+"px";
   base.setAttribute("viewBox",`${V.cx-w/2/V.z} ${V.cy-h/2/V.z} ${w/V.z} ${h/V.z}`);
   const items=pool();
-  pinsEl.innerHTML=items.map(s=>{const sx=(X(s.lng)-V.cx)*V.z+w/2, sy=(Y(s.lat)-V.cy)*V.z+h/2;
-    if(sx<-40||sy<-60||sx>w+40||sy>h+60)return "";
-    return `<div class="pin ${S.sel===s.id?"sel":""} ${S.nav===s.id?"dest":""}" data-id="${s.id}" style="left:${sx}px;top:${sy}px">
-      <div class="d" style="background:${FC[s.fuels[0]]}"></div></div>`;}).join("");
-  pinsEl.querySelectorAll(".pin").forEach(p=>p.addEventListener("pointerup",e=>{e.stopPropagation();openPop(+p.dataset.id);}));
+  const sig=items.map(s=>s.id).join(",")+"|"+S.sel+"|"+S.nav;
+  if(sig!==pinSig){ // rebuild DOM only when the set changes; drags just reposition
+    pinSig=sig;pinById=new Map();
+    pinsEl.innerHTML=items.map(s=>
+     `<div class="pin ${S.sel===s.id?"sel":""} ${S.nav===s.id?"dest":""}" data-id="${s.id}" role="button" tabindex="0" aria-label="${s.name}, ${s.fuels.join(", ")}, ${price(s)}, ${s.open?"open":"closed"}">
+       <div class="d" style="background:${FC[s.fuels[0]]}"></div></div>`).join("");
+    pinsEl.querySelectorAll(".pin").forEach(p=>{pinById.set(+p.dataset.id,p);
+      p.addEventListener("pointerup",e=>{e.stopPropagation();openPop(+p.dataset.id);});});
+    pinsEl.onkeydown=e=>{const p=e.target.closest&&e.target.closest(".pin");
+      if(p&&(e.key==="Enter"||e.key===" ")){e.preventDefault();openPop(+p.dataset.id);}};
+  }
+  for(const s of items){const el=pinById.get(s.id);if(!el)continue;
+    const sx=(X(s.lng)-V.cx)*V.z+w/2, sy=(Y(s.lat)-V.cy)*V.z+h/2;
+    el.style.display=(sx<-40||sy<-60||sx>w+40||sy>h+60)?"none":"block";
+    el.style.left=sx+"px";el.style.top=sy+"px";}
   if(S.pos){const mx=(X(S.pos.lng)-V.cx)*V.z+w/2,my=(Y(S.pos.lat)-V.cy)*V.z+h/2;
     const me=$("meDot");me.style.display="block";me.style.left=mx+"px";me.style.top=my+"px";}
   if(S.sel)positionPop(true);
@@ -252,6 +267,14 @@ mapEl.addEventListener("pointermove",e=>{if(!ptrs.has(e.pointerId))return;
 const dropPtr=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinchD=0;};
 mapEl.addEventListener("pointerup",dropPtr);mapEl.addEventListener("pointercancel",dropPtr);
 mapEl.addEventListener("wheel",e=>{e.preventDefault();const r=mapEl.getBoundingClientRect();zoomBy(e.deltaY<0?1.15:1/1.15,e.clientX-r.left,e.clientY-r.top);},{passive:false});
+mapEl.addEventListener("keydown",e=>{const step=120/V.z;
+ if(e.key==="ArrowUp"){V.cy-=step;render();}
+ else if(e.key==="ArrowDown"){V.cy+=step;render();}
+ else if(e.key==="ArrowLeft"){V.cx-=step;render();}
+ else if(e.key==="ArrowRight"){V.cx+=step;render();}
+ else if(e.key==="+"||e.key==="="){zoomBy(1.25);}
+ else if(e.key==="-"||e.key==="_"){zoomBy(1/1.25);}
+ else return;e.preventDefault();});
 let lastTap=0;
 mapEl.addEventListener("pointerup",e=>{const n=Date.now();if(n-lastTap<300){const r=mapEl.getBoundingClientRect();zoomBy(1.6,e.clientX-r.left,e.clientY-r.top);}lastTap=n;});
 
@@ -358,7 +381,11 @@ function openDetails(id){
 }
 function toggleSave(id){S.saved.has(id)?S.saved.delete(id):S.saved.add(id);
  store("saved",[...S.saved]);renderSheet();toast(S.saved.has(id)?"Saved ♥":"Removed");openDetails(id);}
-function toggleMute(){S.voice=!S.voice;
+function speak(t){try{
+ if(!S.voice||!("speechSynthesis" in window))return;
+ speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.rate=1.05;speechSynthesis.speak(u);
+}catch(_){}}
+function toggleMute(){S.voice=!S.voice;try{speechSynthesis.cancel();}catch(_){}
  $("muteBtn").textContent=S.voice?"🔊 Voice on":"🔇 Muted";
  if(S.nav)startNav(S.nav,true);else toast(S.voice?"Voice guidance on":"Voice guidance muted");}
 /* ---- street router: A* over the drawn grids, so routes follow roads ---- */
@@ -438,7 +465,8 @@ function startNav(id,quiet){
   }
   clearInterval(S.navTimer);
   $("phone").classList.add("naving");
-  renderNav();render();$("navb").classList.add("on");if(!quiet)toast("Navigating — drive safe 🛣️");
+  renderNav();render();$("navb").classList.add("on");
+  if(!quiet){toast("Navigating — drive safe 🛣️");speak("Navigating. "+S.navSteps[0].t);}
   // hands-free: steps advance on their own like live GPS guidance, no taps needed
   S.navTimer=setInterval(()=>{if(S.stepIdx<S.navSteps.length){advanceStep();}},6000);
 }
@@ -456,10 +484,13 @@ function renderNav(){
 function advanceStep(){
   if(!S.navSteps)return;
   S.stepIdx++;
-  if(S.stepIdx>=S.navSteps.length){S.arrived=true;clearInterval(S.navTimer);toast("You've arrived 🎉");}
+  if(S.stepIdx>=S.navSteps.length){S.arrived=true;clearInterval(S.navTimer);
+    speak("You have arrived. "+(ST.find(x=>x.id===S.nav)||{}).name);toast("You've arrived 🎉");}
+  else speak(S.navSteps[S.stepIdx].t);
   renderNav();
 }
 function endNav(){S.nav=null;S.navSteps=null;S.stepIdx=0;S.arrived=false;clearInterval(S.navTimer);
+ try{speechSynthesis.cancel();}catch(_){}
  document.querySelector("#routePath")?.remove();document.querySelector("#routeCasing")?.remove();
  $("navb").classList.remove("on");
  $("phone").classList.remove("naving");render();renderSheet();}

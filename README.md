@@ -26,13 +26,19 @@ Answer: **"Where can I get the energy I need, how much will it cost, and how do 
 ```
 TankUp/
 ├── README.md
-├── design.html          # design system preview (open in browser)
-├── prototype.html       # clickable phone mockup
-├── demo.html            # full interactive web demo
+├── demo.html            # full interactive web demo (Lagos showcase)
+├── mobile.html          # mobile-first demo: the lead product surface
+├── gallery.html         # design system gallery (open in browser)
+├── data/stations.js     # generated station data (see scripts/)
 ├── .env.example         # copy to .env (never commit real keys)
+├── lib/design/          # Flutter design tokens (Phase 1)
+├── supabase/            # schema, seeds, runbook (source of truth)
 └── docs/
     ├── TankUp-PRD.md
-    └── Implementation-Plan.md
+    ├── Implementation-Plan.md
+    ├── api/contract.md
+    ├── adr/              # architecture decisions
+    └── archive/          # retired demos (design.html, prototype.html)
 ```
 
 ## Branches
