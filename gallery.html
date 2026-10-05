@@ -75,7 +75,8 @@
   .price{font-size:24px;font-weight:800;margin-top:10px}.price small{font-size:13px;font-weight:600;color:var(--second)}
   .markers{display:flex;gap:20px;margin-top:14px;flex-wrap:wrap}
   .marker{display:flex;align-items:center;gap:9px;font-weight:700;font-size:14px}
-  .dot{width:28px;height:28px;border-radius:50% 50% 50% 4px;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 0 0 1.5px rgba(15,23,42,.9),0 2px 8px rgba(0,0,0,.45)}
+  .dot{width:28px;height:28px;border-radius:50% 50% 50% 4px;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 0 0 1px rgba(15,23,42,.55),0 2px 8px rgba(0,0,0,.4)}
+  body.dark .dot{box-shadow:0 0 0 1.5px rgba(255,255,255,.9),0 2px 8px rgba(0,0,0,.6)}
   .dot.closed{filter:grayscale(1);opacity:.55}
   .sheetmock{border:1px solid var(--line);border-radius:18px;overflow:hidden;max-width:420px;background:var(--card)}
   .grab{width:44px;height:5px;border-radius:99px;background:var(--line);margin:10px auto 2px}
