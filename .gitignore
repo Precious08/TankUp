@@ -1,5 +1,6 @@
 # Secrets — never commit real keys
 .env
+config.local.js
 *.keystore
 *.jks
 *.p8
