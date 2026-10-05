@@ -66,9 +66,9 @@ Exit: gallery screen approved on a real phone in sunlight; markers distinguishab
 
 ---
 
-## Phase 2 — Architecture decisions
+## Phase 2 — Architecture decisions — DONE
 
-Goal: no rework later. Write one-page ADRs in `docs/adr/`.
+Goal: no rework later. One-page ADRs in `docs/adr/` — all five accepted:
 
 1. `001-stack.md` — final stack (see table above).
 2. `002-app-structure.md` — feature-first folders: `features/{home,search,saved,trips,profile,stations,navigation}/…` + `core/{network,location,storage,design}/…`.
