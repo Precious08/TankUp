@@ -689,3 +689,10 @@ Live preview: `design.html` (repo root). Tokens feed Phase 1 (`lib/design/tokens
 
 * Dark header, card grid, system font, original greens/grays. Kept in git history (`5b01b1f` and earlier).
 
+## **Phase 1 gallery — `gallery.html` + `lib/design/tokens.dart`**
+
+* 9-section gallery (color, typography, spacing/radii, buttons, inputs, station card + bottom sheet, markers, toggles/banners/loading, rules checklist) with light+dark toggle.  
+* Dark mode reworked: luminous tag tones, glowing primary button (#22C55E + near-black text), corrected chip inversion, deeper card shadows.  
+* Loading shimmer given its own gradient after dark looked better than light.  
+* Tokens extracted to code (`lib/design/tokens.dart`) so the Flutter scaffold (Phase 5) consumes them directly — no re-spec needed.
+

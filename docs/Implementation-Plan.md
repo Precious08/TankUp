@@ -44,9 +44,14 @@ Exit: `git status` clean, `.gitignore` present, branch plan written in README, k
 
 ---
 
-## Phase 1 — Design system (before any feature UI)
+## Phase 1 — Design system (before any feature UI) — DONE (pending sunlight sign-off)
 
 Goal: every screen looks like TankUp from day one. Maps PRD §24 (simple, fast, safety-conscious).
+
+- [x] Tokens in `lib/design/tokens.dart` (color, type, spacing, radii — gallery-mirrored, AA-checked).
+- [x] Gallery in `gallery.html` (9 sections: color, type, spacing, buttons, inputs, card+sheet, markers, toggles/banners/loading, rules checklist) with working light+dark toggle.
+- [x] Contrast pass: action green #15803D/white 5.0:1, secondary #475569 7.5:1, dark-mode flips (luminous tags, glowing primary button), dedicated light shimmer gradient.
+- [ ] Sunlight sign-off: approve gallery + markers on a real phone outdoors (owner task).
 
 1. **Tokens** (`lib/design/tokens.dart` or equivalent):
    - Colors: primary (energy green), Petrol/CNG/EV marker colors (3 distinct, colorblind-safe), surface, error, warning (closed/no-fuel states). Light + dark values.
