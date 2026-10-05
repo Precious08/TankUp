@@ -80,9 +80,13 @@ Exit: 5 ADRs merged; folder skeleton exists with no dead code.
 
 ---
 
-## Phase 3 — Data model + API contract
+## Phase 3 — Data model + API contract — DONE
 
 Goal: backend and app agree before coding (§27.9).
+
+- [x] Schema in `supabase/migrations/0001_schema.sql` (9 tables, PostGIS geo, one-active-vehicle guard, `updated_at` triggers, full RLS, `avatars` bucket ≤5MB).
+- [x] Seed in `supabase/seed.sql` (30 Lagos stations, 7 districts, mixed fuels/prices/availability).
+- [x] Contract in `docs/api/contract.md` (endpoints, avatar flow, validation, RLS summary).
 
 Tables (Supabase Postgres):
 - `drivers(id, display_name, avatar_url, phone, email, created_at)`
