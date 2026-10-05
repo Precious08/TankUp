@@ -185,222 +185,20 @@
   </div>
 </div>
 <div id="toast"></div>
-
+<script src="data/stations.js"></script>
 <script>
-/* ---------- data ---------- */
-/* National station database — sample, verify before launch (see supabase/seed-national.md).
-   Lagos 8 keep detail coords; all other rows plot by real lng/lat on the Nigeria view. */
-const LAGOS = [
- {id:1,name:"TotalEnergies — Lekki P1",state:"Lagos",lga:"Eti-Osa",area:"Lekki",addr:"Admiralty Way, Lekki",lng:3.555,lat:6.447,km:2.1,min:7,fuels:["Petrol","CNG"],pp:865,unit:"/L",avail:"Available",open:true,hours:"Open 24 hrs",rate:4.2,rc:318,x:54,y:38},
- {id:2,name:"NNPC — Ikoyi Rd",state:"Lagos",lga:"Eti-Osa",area:"Ikoyi",addr:"Ikoyi Road",lng:3.445,lat:6.452,km:3.4,min:11,fuels:["Petrol"],pp:859,unit:"/L",avail:"Available",open:true,hours:"Open · closes 11pm",rate:4.0,rc:204,x:66,y:30},
- {id:3,name:"ChargePoint — VI Hub",state:"Lagos",lga:"Eti-Osa",area:"Victoria Island",addr:"Adeola Odeku, VI",lng:3.421,lat:6.431,km:4.0,min:13,fuels:["EV"],pp:310,unit:"/kWh",avail:"2/6 stalls free",open:true,hours:"Open 24 hrs",rate:4.6,rc:97,x:30,y:52},
- {id:4,name:"Mobil — Admiralty",state:"Lagos",lga:"Eti-Osa",area:"Lekki",addr:"Admiralty Way, Lekki",lng:3.548,lat:6.443,km:1.2,min:5,fuels:["Petrol","EV"],pp:870,unit:"/L",avail:"Petrol low",open:true,hours:"Open 24 hrs",rate:3.9,rc:411,x:22,y:24},
- {id:5,name:"CNG Express — Lekki",state:"Lagos",lga:"Eti-Osa",area:"Lekki",addr:"Chevron Drive, Lekki",lng:3.562,lat:6.439,km:5.2,min:16,fuels:["CNG"],pp:490,unit:"/SCM",avail:"Available",open:false,hours:"Closed · opens 6am",rate:4.4,rc:58,x:74,y:20},
- {id:6,name:"AP — Ozumba Mbadiwe",state:"Lagos",lga:"Eti-Osa",area:"Victoria Island",addr:"Ozumba Mbadiwe, VI",lng:3.438,lat:6.428,km:5.8,min:18,fuels:["Petrol","CNG","EV"],pp:872,unit:"/L",avail:"Available",open:true,hours:"Open 24 hrs",rate:4.1,rc:156,x:44,y:60},
- {id:7,name:"Eterna — Lekki Epe",state:"Lagos",lga:"Eti-Osa",area:"Lekki",addr:"Lekki-Epe Expressway",lng:3.585,lat:6.449,km:7.3,min:21,fuels:["Petrol"],pp:855,unit:"/L",avail:"Available",open:true,hours:"Open · closes 10pm",rate:3.8,rc:89,x:84,y:52},
- {id:8,name:"VoltHub — Ikoyi",state:"Lagos",lga:"Eti-Osa",area:"Ikoyi",addr:"Bourdillon Rd, Ikoyi",lng:3.451,lat:6.458,km:4.6,min:14,fuels:["EV"],pp:295,unit:"/kWh",avail:"4/8 stalls free",open:true,hours:"Open 24 hrs",rate:4.7,rc:64,x:56,y:16},
-];
-/* Compact rows: [name,state,lga,area,address,lng,lat,fuels,price,unit?,open?,avail?,hours?] */
-const RAW = [
-["NNPC Mega — Umuahia","Abia","Umuahia North","Umuahia","Aba Rd",7.482,5.524,"P",862],
-["TotalEnergies — Aba","Abia","Aba South","Aba","Azikiwe Rd",7.369,5.116,"P",865],
-["Mobil — Aba","Abia","Aba South","Aba","Faulks Rd",7.352,5.098,"P",868],
-["Rainoil — Umuahia","Abia","Umuahia North","Umuahia","Bende Rd",7.495,5.536,"P",860],
-["Eterna — Aba","Abia","Aba South","Aba","Port Harcourt Rd",7.331,5.082,"P",866],
-["NNPC Mega — Yola","Adamawa","Yola South","Yola","Bank Rd",12.428,9.278,"P",885],
-["TotalEnergies — Yola","Adamawa","Yola North","Yola","Galadima Aminu Way",12.436,9.235,"P",888],
-["A.A. Rano — Yola","Adamawa","Yola South","Yola","Numan Rd",12.452,9.29,"P",884],
-["Oando — Mubi","Adamawa","Mubi North","Mubi","Yola Rd",13.263,10.268,"P",890],
-["Conoil — Numan","Adamawa","Numan","Numan","Yola-Numan Rd",12.031,9.459,"P",886],
-["NNPC — Uyo","Akwa Ibom","Uyo","Uyo","Aka Rd",7.928,5.048,"P",863],
-["TotalEnergies — Uyo","Akwa Ibom","Uyo","Uyo","Oron Rd",7.945,5.042,"P",866],
-["Mobil — Eket","Akwa Ibom","Eket","Eket","Eket-Oron Rd",7.929,4.649,"P",864],
-["Rainoil — Ikot Ekpene","Akwa Ibom","Ikot Ekpene","Ikot Ekpene","Aba Rd",7.714,5.182,"P",862],
-["Eterna — Uyo","Akwa Ibom","Uyo","Uyo","Nwaniba Rd",7.917,5.061,"P",867],
-["NNPC — Awka","Anambra","Awka South","Awka","Enugu-Onitsha Exp",7.072,6.211,"P",861],
-["TotalEnergies — Onitsha","Anambra","Onitsha South","Onitsha","Upper Iweka",6.782,6.168,"P",858],
-["Mobil — Onitsha","Anambra","Onitsha South","Onitsha","Awka Rd",6.795,6.175,"P",860],
-["Rainoil — Nnewi","Anambra","Nnewi North","Nnewi","Nnewi-Nnobi Rd",6.911,6.019,"P",859],
-["Oando — Awka","Anambra","Awka South","Awka","Zik Ave",7.065,6.205,"P",862],
-["NNPC Mega — Bauchi","Bauchi","Bauchi","Bauchi","Jos Rd",9.831,10.314,"P",889],
-["TotalEnergies — Bauchi","Bauchi","Bauchi","Bauchi","Yelwa",9.845,10.322,"P",891],
-["A.A. Rano — Azare","Bauchi","Katagum","Azare","Kano Rd",10.192,11.674,"P",893],
-["Oando — Bauchi","Bauchi","Bauchi","Bauchi","Dass Rd",9.812,10.305,"P",890],
-["Conoil — Misau","Bauchi","Misau","Misau","Gombe Rd",10.462,11.052,"P",892],
-["NNPC — Yenagoa","Bayelsa","Yenagoa","Yenagoa","Mbiama-Yenagoa Rd",6.264,4.932,"P",868],
-["TotalEnergies — Yenagoa","Bayelsa","Yenagoa","Yenagoa","Isaac Boro Exp",6.281,4.918,"P",870],
-["Rainoil — Yenagoa","Bayelsa","Yenagoa","Yenagoa","AIT Rd",6.295,4.945,"P",867],
-["Oando — Ogbia","Bayelsa","Ogbia","Ogbia","Ogbia Town Rd",6.26,4.65,"P",871],
-["Eterna — Sagbama","Bayelsa","Sagbama","Sagbama","Sagbama Rd",6.211,5.158,"P",869],
-["NNPC Mega — Makurdi","Benue","Makurdi","Makurdi","Gboko Rd",8.524,7.732,"P",878],
-["TotalEnergies — Makurdi","Benue","Makurdi","Makurdi","Kashim Ibrahim Rd",8.536,7.741,"P",880],
-["Rainoil — Gboko","Benue","Gboko","Gboko","Gboko-Aliade Rd",9.004,7.326,"P",879],
-["Oando — Otukpo","Benue","Otukpo","Otukpo","Enugu Rd",8.137,7.191,"P",881],
-["Mobil — Makurdi","Benue","Makurdi","Wurukum","Wurukum Market Rd",8.518,7.724,"P",882],
-["NNPC Mega — Maiduguri","Borno","Maiduguri MC","Maiduguri","Bama Rd",13.152,11.832,"P",895],
-["TotalEnergies — Maiduguri","Borno","Maiduguri MC","Maiduguri","Damboa Rd",13.168,11.819,"P",897],
-["A.A. Rano — Maiduguri","Borno","Maiduguri MC","Maiduguri","Kano Rd",13.141,11.845,"P",894],
-["Oando — Biu","Borno","Biu","Biu","Damaturu Rd",12.187,10.612,"P",898],
-["Conoil — Maiduguri","Borno","Maiduguri MC","Maiduguri","Lagos St",13.159,11.841,"P",896],
-["NNPC — Calabar","Cross River","Calabar Municipal","Calabar","Murtala Mohammed Hwy",8.332,4.954,"P",864],
-["TotalEnergies — Calabar","Cross River","Calabar Municipal","Calabar","MCC Rd",8.341,4.968,"P",866],
-["Mobil — Calabar","Cross River","Calabar South","Calabar","Watt Market Rd",8.324,4.948,"P",867],
-["Rainoil — Ikom","Cross River","Ikom","Ikom","Calabar-Ikom Hwy",8.711,5.962,"P",869],
-["Oando — Ogoja","Cross River","Ogoja","Ogoja","Abakaliki Rd",8.802,6.654,"P",870],
-["NNPC — Asaba","Delta","Oshimili South","Asaba","Nnebisi Rd",6.733,6.208,"P",860],
-["TotalEnergies — Warri","Delta","Warri South","Warri","Effurun Roundabout",5.752,5.523,"P",858],
-["Mobil — Warri","Delta","Warri South","Warri","Airport Rd",5.773,5.541,"P",859],
-["Rainoil — Ughelli","Delta","Ughelli North","Ughelli","Ughelli-Patani Rd",6.012,5.492,"P",857],
-["Oando — Sapele","Delta","Sapele","Sapele","Sapele-Warri Rd",5.676,5.894,"P",861],
-["NNPC — Abakaliki","Ebonyi","Abakaliki","Abakaliki","Afikpo Rd",8.112,6.324,"P",863],
-["TotalEnergies — Abakaliki","Ebonyi","Abakaliki","Abakaliki","Ogoja Rd",8.098,6.331,"P",865],
-["Rainoil — Onueke","Ebonyi","Ezza South","Onueke","Enugu-Abakaliki Exp",7.962,6.342,"P",864],
-["Oando — Afikpo","Ebonyi","Afikpo North","Afikpo","Afikpo-Okigwe Rd",7.941,5.882,"P",866],
-["Mobil — Abakaliki","Ebonyi","Abakaliki","Abakaliki","Water Works Rd",8.121,6.318,"P",867],
-["NNPC Mega — Benin","Edo","Oredo","Benin City","Sapele Rd",5.632,6.342,"P",859],
-["TotalEnergies — Benin","Edo","Oredo","Benin City","Akpakpava Rd",5.621,6.335,"P",861],
-["Mobil — Benin","Edo","Egor","Benin City","Uselu-Lagos Rd",5.604,6.382,"P",862],
-["Rainoil — Auchi","Edo","Etsako West","Auchi","Auchi-Okene Rd",6.264,7.069,"P",864],
-["Oando — Ekpoma","Edo","Esan West","Ekpoma","Benin-Auchi Rd",6.142,6.743,"P",863],
-["NNPC — Ado Ekiti","Ekiti","Ado Ekiti","Ado Ekiti","Ikere Rd",5.221,7.623,"P",866],
-["TotalEnergies — Ado Ekiti","Ekiti","Ado Ekiti","Ado Ekiti","New Iyin Rd",5.215,7.612,"P",868],
-["Mobil — Ikere","Ekiti","Ikere","Ikere","Akure Rd",5.231,7.498,"P",869],
-["Rainoil — Ado Ekiti","Ekiti","Ado Ekiti","Ado Ekiti","Afao Rd",5.235,7.631,"P",867],
-["Bovas — Ado Ekiti","Ekiti","Ado Ekiti","Ado Ekiti","Secretariat Rd",5.208,7.618,"P",865],
-["NNPC Mega — Enugu","Enugu","Enugu North","Enugu","Enugu-Onitsha Exp",7.492,6.452,"P",860],
-["TotalEnergies — Enugu","Enugu","Enugu South","Enugu","Agbani Rd",7.485,6.431,"P",862],
-["Mobil — Nsukka","Enugu","Nsukka","Nsukka","Enugu Rd",7.396,6.858,"P",863],
-["Rainoil — Enugu","Enugu","Enugu North","Enugu","Ogui Rd",7.478,6.448,"P",861],
-["Oando — Awgu","Enugu","Awgu","Awgu","Enugu-Port Harcourt Exp",7.471,6.075,"P",864],
-["NNPC Mega — Gombe","Gombe","Gombe","Gombe","Bauchi Rd",11.168,10.289,"P",890],
-["TotalEnergies — Gombe","Gombe","Gombe","Gombe","Dukku Rd",11.152,10.281,"P",892],
-["A.A. Rano — Gombe","Gombe","Gombe","Gombe","Yola Rd",11.183,10.296,"P",891],
-["Oando — Kumo","Gombe","Akko","Kumo","Gombe-Yola Rd",10.987,10.042,"P",893],
-["Conoil — Bajoga","Gombe","Funakaye","Bajoga","Nafada Rd",11.431,10.852,"P",894],
-["NNPC Mega — Owerri","Imo","Owerri Municipal","Owerri","Douglas Rd",7.032,5.484,"P",861],
-["TotalEnergies — Owerri","Imo","Owerri Municipal","Owerri","Wetheral Rd",7.028,5.492,"P",863],
-["Mobil — Orlu","Imo","Orlu","Orlu","Owerri-Orlu Rd",7.012,5.794,"P",864],
-["Rainoil — Okigwe","Imo","Okigwe","Okigwe","Enugu-Port Harcourt Exp",7.351,5.829,"P",862],
-["Oando — Owerri","Imo","Owerri North","Owerri","Egbu Rd",7.045,5.501,"P",865],
-["NNPC — Dutse","Jigawa","Dutse","Dutse","Kiyawa Rd",9.342,11.761,"P",892],
-["A.A. Rano — Dutse","Jigawa","Dutse","Dutse","Jahun Rd",9.335,11.748,"P",891],
-["TotalEnergies — Hadejia","Jigawa","Hadejia","Hadejia","Kano Rd",10.041,12.451,"P",894],
-["Oando — Gumel","Jigawa","Gumel","Gumel","Kano Rd",9.384,12.625,"P",895],
-["Conoil — Dutse","Jigawa","Dutse","Dutse","Danmasara",9.351,11.769,"P",893],
-["NNPC Mega — Kaduna","Kaduna","Chikun","Kaduna","Ahmadu Bello Way",7.438,10.524,"P",884],
-["TotalEnergies — Kaduna","Kaduna","Kaduna South","Kaduna","Nnamdi Azikiwe Exp",7.452,10.501,"P",886],
-["Mobil — Zaria","Kaduna","Sabon Gari","Zaria","Kaduna-Zaria Exp",7.726,11.112,"P",887],
-["A.A. Rano — Kaduna","Kaduna","Chikun","Kaduna","Kachia Rd",7.421,10.512,"P",885],
-["Oando — Kafanchan","Kaduna","Jema'a","Kafanchan","Kafanchan Rd",8.293,9.584,"P",888],
-["NNPC Mega — Kano","Kano","Kano Municipal","Kano","Zaria Rd",8.524,12.002,"P",883],
-["TotalEnergies — Kano","Kano","Fagge","Kano","Ibrahim Taiwo Rd",8.512,11.991,"P",885],
-["A.A. Rano — Kano","Kano","Tarauni","Kano","Gaya Rd",8.548,11.968,"P",882],
-["Mobil — Wudil","Kano","Wudil","Wudil","Kano-Maiduguri Rd",8.847,11.775,"P",886],
-["Oando — Bichi","Kano","Bichi","Bichi","Kano-Katsina Rd",8.243,12.234,"P",887],
-["NNPC — Katsina","Katsina","Katsina","Katsina","Kano Rd",7.601,12.991,"P",888],
-["A.A. Rano — Katsina","Katsina","Katsina","Katsina","Daura Rd",7.612,13.002,"P",887],
-["TotalEnergies — Daura","Katsina","Daura","Daura","Kano Rd",8.321,13.031,"P",890],
-["Oando — Funtua","Katsina","Funtua","Funtua","Sokoto Rd",7.201,11.523,"P",889],
-["Conoil — Katsina","Katsina","Katsina","Katsina","Dutsin-Ma Rd",7.588,12.978,"P",891],
-["NNPC — Birnin Kebbi","Kebbi","Birnin Kebbi","Birnin Kebbi","Gwadangwaji",4.201,12.453,"P",893],
-["A.A. Rano — Birnin Kebbi","Kebbi","Birnin Kebbi","Birnin Kebbi","Sokoto Rd",4.189,12.441,"P",892],
-["TotalEnergies — Argungu","Kebbi","Argungu","Argungu","Sokoto Rd",4.523,12.744,"P",895],
-["Oando — Yauri","Kebbi","Yauri","Yauri","Kontagora Rd",4.781,11.232,"P",896],
-["Conoil — Birnin Kebbi","Kebbi","Birnin Kebbi","Birnin Kebbi","Abdullahi Fodio Rd",4.212,12.462,"P",894],
-["NNPC Mega — Lokoja","Kogi","Lokoja","Lokoja","Ganaja Rd",6.742,7.802,"P",872],
-["TotalEnergies — Lokoja","Kogi","Lokoja","Lokoja","Felele",6.751,7.793,"P",874],
-["Mobil — Okene","Kogi","Okene","Okene","Okene-Auchi Rd",6.234,7.554,"P",875],
-["Rainoil — Kabba","Kogi","Kabba/Bunu","Kabba","Kabba-Ayere Rd",6.072,7.831,"P",873],
-["Oando — Lokoja","Kogi","Lokoja","Lokoja","Nataco",6.735,7.811,"P",876],
-["NNPC Mega — Ilorin","Kwara","Ilorin West","Ilorin","Fate Rd",4.542,8.502,"P",868],
-["TotalEnergies — Ilorin","Kwara","Ilorin South","Ilorin","Taiwo Rd",4.551,8.489,"P",870],
-["Mobil — Offa","Kwara","Offa","Offa","Ilorin Rd",4.721,8.142,"P",871],
-["Bovas — Ilorin","Kwara","Ilorin West","Ilorin","Umar Audi Rd",4.535,8.511,"P",867],
-["Oando — Jebba","Kwara","Moro","Jebba","Jebba-Mokwa Rd",4.812,9.142,"P",872],
-["NNPC — Lafia","Nasarawa","Lafia","Lafia","Jos Rd",8.513,8.492,"P",876],
-["TotalEnergies — Karu","Nasarawa","Karu","Karu","Keffi-Abuja Exp",7.681,9.021,"P",868],
-["Mobil — Keffi","Nasarawa","Keffi","Keffi","Lafia Rd",7.871,8.846,"P",874],
-["A.A. Rano — Lafia","Nasarawa","Lafia","Lafia","Makurdi Rd",8.524,8.485,"P",877],
-["Oando — Mararaba","Nasarawa","Karu","Mararaba","Abuja Rd",7.672,9.032,"P",869],
-["NNPC Mega — Minna","Niger","Chanchaga","Minna","Bosso Rd",6.554,9.613,"P",878],
-["TotalEnergies — Minna","Niger","Chanchaga","Minna","Tunga",6.562,9.602,"P",880],
-["Mobil — Bida","Niger","Bida","Bida","Minna Rd",6.014,9.082,"P",881],
-["A.A. Rano — Suleja","Niger","Suleja","Suleja","Abuja-Kaduna Exp",7.178,9.175,"P",872],
-["Oando — Minna","Niger","Bosso","Minna","Western Bypass",6.541,9.624,"P",879],
-["NNPC — Abeokuta","Ogun","Abeokuta South","Abeokuta","Ibara",3.352,7.152,"P",861],
-["TotalEnergies — Sagamu","Ogun","Sagamu","Sagamu","Lagos-Ibadan Exp",3.652,6.842,"P",858],
-["Mobil — Ijebu-Ode","Ogun","Ijebu-Ode","Ijebu-Ode","Folagbade",3.921,6.823,"P",860],
-["Bovas — Abeokuta","Ogun","Abeokuta South","Abeokuta","Kuto",3.341,7.161,"P",859],
-["Oando — Ota","Ogun","Ado-Odo/Ota","Ota","Idiroko Rd",3.232,6.682,"P",862],
-["Rainoil — Sagamu","Ogun","Sagamu","Sagamu","Sabo",3.645,6.851,"P",857],
-["NNPC Mega — Akure","Ondo","Akure South","Akure","Oyemekun Rd",5.192,7.253,"P",865],
-["TotalEnergies — Akure","Ondo","Akure South","Akure","Alagbaka",5.201,7.241,"P",867],
-["Mobil — Ondo","Ondo","Ondo West","Ondo Town","Ife Rd",4.812,7.092,"P",868],
-["Bovas — Owo","Ondo","Owo","Owo","Benin-Owo Rd",5.586,6.923,"P",866],
-["Oando — Ore","Ondo","Odigbo","Ore","Benin Expressway",4.872,6.742,"P",864],
-["NNPC — Osogbo","Osun","Osogbo","Osogbo","Gbongan Rd",4.562,7.772,"P",864],
-["TotalEnergies — Ile-Ife","Osun","Ife Central","Ile-Ife","Ife-Ibadan Rd",4.561,7.482,"P",863],
-["Mobil — Ilesa","Osun","Ilesa East","Ilesa","Osogbo Rd",4.742,7.621,"P",866],
-["Bovas — Osogbo","Osun","Osogbo","Osogbo","Station Rd",4.551,7.781,"P",862],
-["Oando — Ede","Osun","Ede North","Ede","Osogbo Rd",4.441,7.732,"P",865],
-["NNPC Mega — Ibadan","Oyo","Ibadan North","Ibadan","Challenge",3.902,7.382,"P",859],
-["TotalEnergies — Ibadan","Oyo","Ibadan North","Ibadan","Bodija",3.912,7.431,"P",861],
-["Mobil — Ibadan","Oyo","Egbeda","Ibadan","Ife Rd",3.942,7.372,"P",862],
-["Bovas — Ogbomoso","Oyo","Ogbomoso South","Ogbomoso","Ilorin Rd",4.261,8.133,"P",860],
-["CNG Hybrid — Ibadan","Oyo","Ibadan South-West","Ibadan","Ring Rd",3.882,7.362,"C",495,"/SCM",1],
-["Oando — Oyo","Oyo","Oyo East","Oyo Town","Ibadan-Oyo Rd",3.932,7.852,"P",863],
-["NNPC Mega — Jos","Plateau","Jos North","Jos","Bauchi Rd",8.892,9.928,"P",882],
-["TotalEnergies — Jos","Plateau","Jos South","Jos","Bukuru Exp",8.871,9.912,"P",884],
-["Mobil — Bukuru","Plateau","Jos South","Bukuru","Vom Rd",8.862,9.781,"P",885],
-["A.A. Rano — Jos","Plateau","Jos North","Jos","Zaria Rd",8.903,9.935,"P",883],
-["Oando — Shendam","Plateau","Shendam","Shendam","Lafia Rd",9.031,8.882,"P",886],
-["NNPC Mega — Port Harcourt","Rivers","Port Harcourt","Port Harcourt","Aba Rd",7.012,4.824,"P",859],
-["TotalEnergies — Obio-Akpor","Rivers","Obio-Akpor","Obio-Akpor","East-West Rd",6.981,4.862,"P",861],
-["Mobil — Port Harcourt","Rivers","Port Harcourt","Port Harcourt","Olu Obasanjo Rd",7.024,4.815,"P",862],
-["Rainoil — Eleme","Rivers","Eleme","Eleme","Refinery Rd",7.102,4.792,"P",858],
-["Eterna — Oyigbo","Rivers","Oyigbo","Oyigbo","Port Harcourt-Aba Exp",7.131,4.873,"P",860],
-["ChargePoint — Port Harcourt","Rivers","Port Harcourt","Port Harcourt","Stadium Rd",7.002,4.833,"E",305,"/kWh",1],
-["NNPC Mega — Sokoto","Sokoto","Sokoto North","Sokoto","Gusau Rd",5.242,13.062,"P",894],
-["TotalEnergies — Sokoto","Sokoto","Sokoto South","Sokoto","Kano Rd",5.231,13.048,"P",896],
-["A.A. Rano — Sokoto","Sokoto","Wamako","Sokoto","Dange Rd",5.224,13.071,"P",893],
-["Oando — Tambuwal","Sokoto","Tambuwal","Tambuwal","Sokoto-Jega Rd",5.661,12.402,"P",897],
-["Conoil — Gwadabawa","Sokoto","Gwadabawa","Gwadabawa","Illela Rd",5.152,13.352,"P",898],
-["NNPC — Jalingo","Taraba","Jalingo","Jalingo","Hammaruwa",11.362,8.892,"P",891],
-["TotalEnergies — Jalingo","Taraba","Jalingo","Jalingo","Roadblock",11.351,8.881,"P",893],
-["A.A. Rano — Wukari","Taraba","Wukari","Wukari","Jalingo Rd",9.778,7.872,"P",895],
-["Oando — Bali","Taraba","Bali","Bali","Jalingo Rd",10.942,7.852,"P",896],
-["Conoil — Jalingo","Taraba","Jalingo","Jalingo","Magami",11.373,8.903,"P",892],
-["NNPC — Damaturu","Yobe","Damaturu","Damaturu","Maiduguri Rd",11.752,11.742,"P",893],
-["TotalEnergies — Potiskum","Yobe","Potiskum","Potiskum","Kano Rd",11.082,11.712,"P",895],
-["A.A. Rano — Damaturu","Yobe","Damaturu","Damaturu","Gashua Rd",11.763,11.751,"P",894],
-["Oando — Gashua","Yobe","Bade","Gashua","Nguru Rd",11.042,12.872,"P",897],
-["Conoil — Potiskum","Yobe","Potiskum","Potiskum","Damaturu Rd",11.071,11.723,"P",896],
-["NNPC — Gusau","Zamfara","Gusau","Gusau","Sokoto Rd",6.662,12.172,"P",892],
-["A.A. Rano — Gusau","Zamfara","Gusau","Gusau","Zaria Rd",6.671,12.161,"P",891],
-["TotalEnergies — Kaura Namoda","Zamfara","Kaura Namoda","Kaura Namoda","Sokoto Rd",6.582,12.592,"P",894],
-["Oando — Talata Mafara","Zamfara","Talata Mafara","Talata Mafara","Sokoto Rd",6.062,12.572,"P",895],
-["Conoil — Gusau","Zamfara","Gusau","Gusau","Bye-Pass",6.683,12.183,"P",893],
-["NNPC Mega — Abuja","FCT","AMAC","Abuja","Kubwa Exp",7.412,9.082,"P",862],
-["TotalEnergies — Gwarimpa","FCT","AMAC","Gwarimpa","3rd Ave",7.402,9.103,"P",864],
-["Mobil — Abuja","FCT","AMAC","Abuja","Airport Rd",7.381,8.992,"P",865],
-["Oando — Lugbe","FCT","AMAC","Lugbe","Airport Rd",7.372,8.971,"P",863],
-["Rainoil — Kuje","FCT","Kuje","Kuje","Gwagwalada Rd",7.241,8.881,"P",866],
-["ChargePoint — Central Area","FCT","AMAC","Central Area","Tafawa Balewa Way",7.491,9.057,"E",300,"/kWh",1],
-["CNG Express — Kubwa","FCT","Bwari","Kubwa","Kubwa Exp",7.405,9.121,"C",498,"/SCM",1],
-];
-const FEXP={P:["Petrol"],PC:["Petrol","CNG"],PE:["Petrol","EV"],PCE:["Petrol","CNG","EV"],C:["CNG"],E:["EV"]};
+/* ---------- data (generated data/stations.js is the source; Lagos 8 keep demo detail via EXTRA) ---------- */
+const EXTRA={"TotalEnergies — Lekki P1":{km:2.1,min:7,x:54,y:38,rate:4.2,rc:318},"NNPC — Ikoyi Rd":{km:3.4,min:11,x:66,y:30,rate:4.0,rc:204},"ChargePoint — VI Hub":{km:4.0,min:13,x:30,y:52,rate:4.6,rc:97},"Mobil — Admiralty":{km:1.2,min:5,x:22,y:24,rate:3.9,rc:411},"CNG Express — Lekki":{km:5.2,min:16,x:74,y:20,rate:4.4,rc:58},"AP — Ozumba Mbadiwe":{km:5.8,min:18,x:44,y:60,rate:4.1,rc:156},"Eterna — Lekki Epe":{km:7.3,min:21,x:84,y:52,rate:3.8,rc:89},"VoltHub — Ikoyi":{km:4.6,min:14,x:56,y:16,rate:4.7,rc:64}};
 const nx=lng=>Math.min(95,Math.max(5,(lng-2.7)/12*100));
 const ny=lat=>Math.min(93,Math.max(7,(1-(lat-4.2)/9.7)*100));
-const ST=LAGOS.concat(RAW.map((r,i)=>({id:100+i,name:r[0],state:r[1],lga:r[2],area:r[3],addr:r[4],
- lng:r[5],lat:r[6],km:null,min:null,fuels:FEXP[r[7]],pp:r[8],unit:r[9]||"/L",avail:r[11]||"Available",
- open:r[10]!==0,hours:r[10]!==0?"Open 24 hrs":"Closed · opens 6am",
- rate:+(3.7+((100+i)%9)*0.1).toFixed(1),rc:20+((100+i)*37)%180,
- x:+nx(r[5]).toFixed(1),y:+ny(r[6]).toFixed(1)})));
+const ST=TANKUP_STATIONS.map(s=>{const e=EXTRA[s.name]||{};
+ return Object.assign({},s,{km:e.km??null,min:e.min??null,rate:e.rate??s.rate,rc:e.rc??s.rc,
+  x:e.x??+nx(s.lng).toFixed(1),y:e.y??+ny(s.lat).toFixed(1)});});
 const STATES=["All",...new Set(ST.map(s=>s.state))].sort((a,b)=>a==="All"?-1:b==="All"?1:a.localeCompare(b));
 const dstr=s=>s.km!=null?`${dist(s)} · ~${s.min} min`:`${s.area}, ${s.state}`;
 const FC={Petrol:"#B45309",CNG:"#075985",EV:"#5B21B6"};
 const FT={Petrol:["#FEF3C7","#B45309"],CNG:["#E0F2FE","#075985"],EV:["#EDE9FE","#5B21B6"]};
-const REV={1:[["Fast pumps, accurate meter.",5],["Queue at rush hour.",3]],3:[["Both CCS stalls worked first try.",5]],4:[["Petrol ran low on Sunday.",2]]};
+const REV={"TotalEnergies — Lekki P1":[["Fast pumps, accurate meter.",5],["Queue at rush hour.",3]],"ChargePoint — VI Hub":[["Both CCS stalls worked first try.",5]],"Mobil — Admiralty":[["Petrol ran low on Sunday.",2]]};
 /* ---------- state ---------- */
 const store=(k,v)=>v===undefined?JSON.parse(localStorage.getItem("tankup."+k)||"null"):localStorage.setItem("tankup."+k,JSON.stringify(v));
 let S={tab:"explore",q:"",fuel:"All",state:store("homestate")||"All",lga:"All",openOnly:false,maxKm:10,sort:"rec",sel:null,cmp:[],nav:null,
@@ -413,7 +211,7 @@ const price=s=>"₦"+s.pp.toLocaleString()+s.unit;
 function persist(){store("saved",[...S.saved]);store("recent",S.recent);store("profile",S.profile);store("vehicles",S.vehicles);store("notif",S.notif);}
 function toast(m){const t=$("toast");t.textContent=m;t.style.display="block";clearTimeout(t._x);t._x=setTimeout(()=>t.style.display="none",1800);}
 /* ---------- filtering ---------- */
-const natMode=()=>S.state!=="All"&&S.state!=="Lagos";
+const natMode=()=>S.state!=="Lagos"; // Lagos keeps street detail; everything else plots on the Nigeria view
 function pool(){return ST.filter(s=>{
   const q=S.q.toLowerCase();
   if(q && !(s.name+" "+s.addr+" "+s.area+" "+s.state+" "+s.lga).toLowerCase().includes(q))return false;
@@ -524,7 +322,7 @@ function openDrawer(id){
    <label class="lbl">COMPARE NEARBY ${S.fuel==="All"?"PETROL":S.fuel.toUpperCase()}</label>
    ${cmpTable(s)}
    <label class="lbl">REVIEWS</label>
-   ${(REV[id]||[["No reviews yet — be the first.",null]]).map(r=>`<div class="kv"><span>${r[0]}</span>${r[1]?`<span class="stars">${r[1]}★</span>`:""}</div>`).join("")}
+   ${(REV[s.name]||[["No reviews yet — be the first.",null]]).map(r=>`<div class="kv"><span>${r[0]}</span>${r[1]?`<span class="stars">${r[1]}★</span>`:""}</div>`).join("")}
    <button class="pillbtn" style="width:100%;margin-top:6px" onclick="addReview(${s.id})">Write a review</button>
    <label class="lbl">CORRECT SOMETHING?</label>
    <button class="pillbtn" style="width:100%" onclick="reportPrice(${s.id})">Report price change</button>`;
@@ -564,7 +362,7 @@ function showCmp(){
 }
 function addReview(id){
   const t=prompt("Your review:");if(!t)return;
-  const r=+(prompt("Rating 1-5:")||"5");(REV[id]=REV[id]||[]).unshift([t,Math.min(5,Math.max(1,r||5))]);
+  const r=+(prompt("Rating 1-5:")||"5");(REV[s.name]=REV[s.name]||[]).unshift([t,Math.min(5,Math.max(1,r||5))]);
   const s=ST.find(x=>x.id===id);s.rc++;toast("Review posted — thanks!");openDrawer(id);
 }
 function reportPrice(id){

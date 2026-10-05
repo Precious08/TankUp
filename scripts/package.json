@@ -1,0 +1,14 @@
+{
+  "name": "tankup-scripts",
+  "private": true,
+  "version": "1.0.0",
+  "description": "One-off + repeatable repo scripts. SQL seed files are the station source of truth.",
+  "type": "module",
+  "scripts": {
+    "check:sql": "node check-sql.mjs",
+    "build:stations": "node build-stations.mjs"
+  },
+  "devDependencies": {
+    "pgsql-parser": "^18.2.8"
+  }
+}
