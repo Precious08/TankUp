@@ -109,9 +109,11 @@ Exit: contract doc reviewed against §16/§17/§27; seed data queryable; avatar 
 
 ---
 
-## Phase 4 — Backend build
+## Phase 4 — Backend build — MOSTLY DONE (live project running)
 
 Goal: working API + auth + storage before app features.
+
+Done: `tankup-dev` live, migrations 0001–0003 + both seeds run (215 rows verified), Email OTP on, `avatars` bucket public with policies, demos reading live with bundled fallback (`config.local.js`, gitignored). Left: Google OAuth (needs Cloud Console session), `tankup-prod` clone before launch.
 
 - [ ] Supabase project (dev + prod = the 2 Free projects), migrations for all tables, RLS policies, seed script.
 - [ ] Auth: email OTP + Google/Apple + guest→account migration. Phone (SMS) OTP explicitly deferred — SMS is never free; use Termii pay-as-you-go only after traction.

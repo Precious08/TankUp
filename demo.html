@@ -246,7 +246,6 @@ function select(id,pushRecent){
   if(id&&pushRecent){S.recent=[id,...S.recent.filter(r=>r!==id)].slice(0,10);persist();if(S.tab==="recent")renderPanel();}
   renderPins();if(S.tab==="explore")renderPanel();
 }
-function renderPop(){}
 /* ---------- panel ---------- */
 document.querySelectorAll(".rl").forEach(b=>b.onclick=()=>{S.tab=b.dataset.s;document.querySelectorAll(".rl").forEach(x=>x.classList.toggle("on",x===b));renderPanel();});
 function renderPanel(){

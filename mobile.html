@@ -97,8 +97,6 @@
   #navSteps .stp.done{opacity:.55}
   #navSteps .stp.done span::before{content:"✓ "}
   #navSteps .stp.cur{background:rgba(74,222,128,.12);border-radius:10px;padding:8px 10px}
-  #navSteps .stp .nx{border:0;border-radius:999px;background:#4ADE80;color:#052E16;font-family:inherit;
-    font-size:12px;font-weight:800;padding:7px 13px;flex-shrink:0}
   #navArrive{background:rgba(74,222,128,.14);border:1px solid rgba(74,222,128,.4);border-radius:12px;
     padding:12px;font-size:14px;font-weight:700;margin-top:10px}
   #navSt{background:rgba(255,255,255,.08);border-radius:12px;padding:10px 12px;margin-top:10px;font-size:13px}
@@ -250,7 +248,6 @@ function render(){
     el.style.left=sx+"px";el.style.top=sy+"px";}
   if(S.pos){const mx=(X(S.pos.lng)-V.cx)*V.z+w/2,my=(Y(S.pos.lat)-V.cy)*V.z+h/2;
     const me=$("meDot");me.style.display="block";me.style.left=mx+"px";me.style.top=my+"px";}
-  if(S.sel)positionPop(true);
 }
 function pool(){const q=S.q.toLowerCase();return ST.filter(s=>{
   if(S.state!=="All"&&s.state!==S.state)return false;
@@ -321,7 +318,6 @@ function openPop(id){
   const hh=pop.offsetHeight||170;pop.style.visibility="";
   pop.style.top=below?(sy+16)+"px":Math.max(86,sy-hh-30)+"px";
 }
-function positionPop(fromRender){if(S.sel&&!fromRender)openPop(S.sel);}
 function closePop(){S.sel=null;$("pop").classList.remove("on");hideMini();render();}
 function hidePop(){ // card away, mini-bar stays docked, pin stays highlighted
   const s=ST.find(x=>x.id===S.sel);$("pop").classList.remove("on");
