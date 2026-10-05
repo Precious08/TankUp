@@ -247,6 +247,11 @@ function drawBase(){
   for(let g=4.2;g<=13.9;g+=0.2)s+=`<line x1="${x0}" y1="${Y(g)}" x2="${x1}" y2="${Y(g)}" stroke="#DDE5D8" stroke-width="3"/>`;
   for(let g=3;g<=14;g++)s+=`<line x1="${X(g)}" y1="${y0}" x2="${X(g)}" y2="${y1}" stroke="#ffffff" stroke-width="14"/>`;
   for(let g=5;g<=13;g++)s+=`<line x1="${x0}" y1="${Y(g)}" x2="${x1}" y2="${Y(g)}" stroke="#ffffff" stroke-width="14"/>`;
+  // Lagos fine streets (the street router below walks this exact grid)
+  let f="";
+  for(let g=3.30;g<=3.661;g+=0.02){f+=`M ${X(g)} ${Y(6.38)} L ${X(g)} ${Y(6.50)} `;}
+  for(let g=6.38;g<=6.501;g+=0.02){f+=`M ${X(3.30)} ${Y(g)} L ${X(3.66)} ${Y(g)} `;}
+  s+=`<path d="${f}" stroke="#D9DEE6" stroke-width="7" fill="none"/><path d="${f}" stroke="#ffffff" stroke-width="4" fill="none"/>`;
   s+=`<ellipse cx="${X(3.55)}" cy="${Y(6.44)}" rx="70" ry="34" fill="#CFE3EF"/>`; // Lagos lagoon
   s+=`<path d="M ${X(4.5)} ${Y(8.6)} Q ${X(6)} ${Y(8.1)} ${X(7.5)} ${Y(7.6)}" stroke="#CFE3EF" stroke-width="22" fill="none"/>`; // river hint
   s+=`<rect x="${X(3.3)}" y="${Y(6.6)}" width="90" height="60" rx="12" fill="#D9EAD3"/>`;
@@ -411,24 +416,86 @@ function toggleSave(id){S.saved.has(id)?S.saved.delete(id):S.saved.add(id);
 function toggleMute(){S.voice=!S.voice;
  $("muteBtn").textContent=S.voice?"🔊 Voice on":"🔇 Muted";
  if(S.nav)startNav(S.nav,true);else toast(S.voice?"Voice guidance on":"Voice guidance muted");}
+/* ---- street router: A* over the drawn grids, so routes follow roads ---- */
+const LAGB={x0:3.30,x1:3.66,y0:6.38,y1:6.50,step:0.02};
+const NATB={x0:2.6,x1:14.7,y0:4.2,y1:13.9,step:0.2};
+const w2ll=(wx,wy)=>({lng:wx/W+2.6,lat:14-wy/W});
+function gridFor(a,b){
+  const inL=p=>p.lng>=LAGB.x0&&p.lng<=LAGB.x1&&p.lat>=LAGB.y0&&p.lat<=LAGB.y1;
+  return (inL(a)&&inL(b))?LAGB:NATB;
+}
+function snapN(B,p){
+  const ni=Math.round((B.x1-B.x0)/B.step),nj=Math.round((B.y1-B.y0)/B.step);
+  const i=Math.min(ni,Math.max(0,Math.round((p.lng-B.x0)/B.step)));
+  const j=Math.min(nj,Math.max(0,Math.round((p.lat-B.y0)/B.step)));
+  return {i,j,lng:B.x0+i*B.step,lat:B.y0+j*B.step};
+}
+function astar(B,a,b){
+  const key=(i,j)=>i+","+j;
+  const H=n=>havKm(B.y0+n.j*B.step,B.x0+n.i*B.step,b.lat,b.lng);
+  const open=[{i:a.i,j:a.j,g:0,f:H(a),p:null}];
+  const best=new Map([[key(a.i,a.j),0]]);
+  const ni=Math.round((B.x1-B.x0)/B.step),nj=Math.round((B.y1-B.y0)/B.step);
+  const DD=[[1,0],[-1,0],[0,1],[0,-1]];
+  let guard=0;
+  while(open.length&&guard++<30000){
+    let bi=0;for(let k=1;k<open.length;k++)if(open[k].f<open[bi].f)bi=k;
+    const cur=open.splice(bi,1)[0];
+    if(cur.i===b.i&&cur.j===b.j){const path=[];let n=cur;
+      while(n){path.unshift({lng:B.x0+n.i*B.step,lat:B.y0+n.j*B.step});n=n.p;}return path;}
+    for(const dd of DD){
+      const i2=cur.i+dd[0],j2=cur.j+dd[1];
+      if(i2<0||j2<0||i2>ni||j2>nj)continue;
+      const g=cur.g+havKm(B.y0+cur.j*B.step,B.x0+cur.i*B.step,B.y0+j2*B.step,B.x0+i2*B.step);
+      const k2=key(i2,j2);
+      if(g<(best.has(k2)?best.get(k2):Infinity)){best.set(k2,g);open.push({i:i2,j:j2,g,f:g+H({i:i2,j:j2}),p:cur});}
+    }
+  }
+  return [{lng:a.lng,lat:a.lat},{lng:b.lng,lat:b.lat}]; // fallback: straight
+}
+function compass(brg){const c=["north","northeast","east","southeast","south","southwest","west","northwest"];return c[Math.round(brg/45)%8];}
+function brg(a,b){const r=x=>x*Math.PI/180,d=x=>x*180/Math.PI;
+ const y=Math.sin(r(b.lng-a.lng))*Math.cos(r(b.lat));
+ const x=Math.cos(r(a.lat))*Math.sin(r(b.lat))-Math.sin(r(a.lat))*Math.cos(r(b.lat))*Math.cos(r(b.lng-a.lng));
+ return (d(Math.atan2(y,x))+360)%360;}
+function buildSteps(path,s){
+  const pts=[path[0]];let b0=null;
+  for(let k=1;k<path.length;k++){
+    const b=brg(path[k-1],path[k]);
+    if(b0===null)b0=b;
+    const chg=Math.abs(((b-b0+540)%360)-180);
+    if(chg>25){pts.push(path[k-1]);b0=b;}
+  }
+  pts.push(path[path.length-1]);
+  const legs=[];let total=0;
+  for(let k=1;k<pts.length;k++){const km=havKm(pts[k-1].lat,pts[k-1].lng,pts[k].lat,pts[k].lng);
+    if(km<0.05&&k<pts.length-1)continue;
+    legs.push({a:pts[k-1],b:pts[k],km});total+=km;}
+  const steps=legs.map((L,i)=>{
+    if(i===0)return {t:`Head ${compass(brg(L.a,L.b))}`,d:L.km.toFixed(1)+" km"};
+    const pb=brg(legs[i-1].a,legs[i-1].b),turn=((brg(L.a,L.b)-pb+540)%360)-180;
+    return {t:turn<-25?"Turn left":turn>25?"Turn right":"Continue straight",d:L.km.toFixed(1)+" km"};});
+  if(!steps.length)steps.push({t:"Head to the pin",d:"nearby"});
+  steps.push({t:`Arrive at ${s.name.split("—")[0].trim()}`,d:s.open?"Open":"Closed"});
+  return {steps,total};
+}
 function startNav(id,quiet){
   const s=ST.find(x=>x.id===id);S.nav=id;closeVeil();closePop();
-  const ox=S.pos?X(S.pos.lng):V.cx, oy=S.pos?Y(S.pos.lat):V.cy+vh()/2/V.z; // GPS dot, else bottom-centre
-  const d=`M ${ox} ${oy} L ${ox} ${Y(s.lat)} L ${X(s.lng)} ${Y(s.lat)}`;
+  const o=S.pos?{lng:S.pos.lng,lat:S.pos.lat}:w2ll(V.cx,V.cy+(vh()/2)/V.z);
+  const B=gridFor(o,s),nodes=astar(B,snapN(B,o),snapN(B,s));
+  const path=[o,...nodes.slice(1,-1),{lng:s.lng,lat:s.lat}];
+  const d="M "+path.map(p=>`${X(p.lng)} ${Y(p.lat)}`).join(" L ");
   document.querySelector("#routePath")?.remove();document.querySelector("#routeCasing")?.remove();
   world.insertAdjacentHTML("beforeend",`<path id="routeCasing" d="${d}" stroke="#ffffff" stroke-width="17" fill="none" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" opacity=".95"/><path id="routePath" d="${d}" stroke="#16A34A" stroke-width="10" fill="none" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`);
   if(!quiet||!S.navSteps){ // fresh navigation builds the step list once
-    const k=S.pos?havKm(S.pos.lat,S.pos.lng,s.lat,s.lng):null;
-    S.navSteps=[
-     {t:`Head toward ${s.area}`,d:k==null?"ahead":k.toFixed(1)+" km"},
-     {t:`Arrive at ${s.name.split("—")[0].trim()}`,d:s.open?"Open":"Closed"}];
-    S.stepIdx=0;S.arrived=false;S.navK=k;
+    const built=buildSteps(path,s);
+    S.navSteps=built.steps;S.stepIdx=0;S.arrived=false;S.navK=built.total;
   }
   clearInterval(S.navTimer);
   $("phone").classList.add("naving");
   renderNav();render();$("navb").classList.add("on");if(!quiet)toast("Navigating — drive safe 🛣️");
   // hands-free: steps advance on their own like live GPS guidance, no taps needed
-  S.navTimer=setInterval(()=>{if(S.stepIdx<S.navSteps.length){advanceStep();}},8000);
+  S.navTimer=setInterval(()=>{if(S.stepIdx<S.navSteps.length){advanceStep();}},6000);
 }
 function renderNav(){
   const s=ST.find(x=>x.id===S.nav);if(!s)return;
