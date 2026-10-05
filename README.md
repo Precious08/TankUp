@@ -68,10 +68,12 @@ Every driver can change anything they own from Profile, no support needed:
 
 ## Status
 
-- [x] PRD v1 with §27 dashboard/backend
-- [ ] Architecture / data model
+- [x] PRD v1 with §27 dashboard/backend (+ §28 tooling, §29 design changelog)
+- [x] Phase 0 repo hygiene (gitignore, env example, branches)
+- [x] Phase 1 design system (gallery.html + lib/design/tokens.dart, light+dark)
+- [ ] Architecture / data model (Phase 2 ADRs — next)
 - [ ] API contract
-- [ ] App scaffold (TBD: Flutter / React Native / native)
+- [ ] App scaffold (Flutter + Supabase + Mapbox, per plan)
 - [ ] MVP build
 
 ## Next steps
