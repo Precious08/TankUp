@@ -1,0 +1,28 @@
+# Secrets — never commit real keys
+.env
+*.keystore
+*.jks
+*.p8
+*.p12
+google-services.json
+GoogleService-Info.plist
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.iml
+
+# Node (tooling, previews)
+node_modules/
+dist/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+*.log

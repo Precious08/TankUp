@@ -636,3 +636,56 @@ From dashboard, drivers can:
 * Validation: avatar file-type/size check, phone/email uniqueness, at least one vehicle if user deletes all (fallback to onboarding vehicle picker).  
 * Success criteria add-on: driver can change avatar, name, vehicle type, and notification prefs in <30 seconds each without leaving Profile.
 
+---
+
+# **28\. Tooling Decisions — Free Now, Upscale Later**
+
+Every tool below is free with no credit card and meets its task for the MVP. Upscale picks are named so we switch only when a free limit forces it.
+
+## **Backend — Supabase Free now**
+
+* Covers auth, Postgres relations, avatar storage, and row-level security in one service — matches §17 and §27.9 with minimal ops.  
+* Free tier (2 projects, 500MB database, 1GB storage, 50k monthly users) carries the full MVP at $0.  
+* Trade-offs accepted: projects pause after 7 idle days, no backups on Free (weekly manual exports).  
+* **Upscale:** Supabase Pro ($25/mo) — backups, never pauses, bigger limits.
+
+## **Maps, search, routing — Mapbox now**
+
+* Mapbox handles display, Geocoding, and Directions on a free allowance with no card — covers §6, §12, and §13 for the MVP.  
+* **Upscale:** Google Maps Platform Places — best Nigerian station/POI search quality. Needs a billing account with a card (its $200 credit ended March 2025; per-SKU free caps now apply).
+
+## **Sign-in — email OTP + Google/Apple now**
+
+* Free via Supabase and enough for the MVP.  
+* SMS is never free, so phone OTP waits until traction.  
+* **Upscale:** Termii (Nigerian, pay-as-you-go) for SMS OTP.
+
+## **Push, crash, analytics — FCM + Firebase now**
+
+* Push, crash reporting, analytics, and beta distribution all free with no card.  
+* **Upscale:** OneSignal (push ops), Sentry (crash triage), PostHog/Mixpanel (funnels) — only if the free tools prove insufficient.
+
+## **Design, CI — Penpot + GitHub Actions now**
+
+* Both free with no limiting caps for this project.  
+* **Upscale:** Figma Professional (designer collaboration), Codemagic (device farms) — only on demand.
+
+Rule: no card-required tool enters the stack before traction. Spend order when forced: Termii SMS → Supabase Pro → Play Console ($25 one-time) → Google Places → Apple Developer ($99/yr, iOS only).
+
+---
+
+# **29\. Design Changelog**
+
+Live preview: `design.html` (repo root). Tokens feed Phase 1 (`lib/design/tokens.dart`).
+
+## **v2 — Minimal refinement**
+
+* **Minimal:** removed boxed cards with shadows; hairline dividers, airy spacing, small-caps section labels.  
+* **Font:** system stack → Plus Jakarta Sans (Google Fonts + system fallback) — friendlier, still legible on low-end screens.  
+* **Contrast fixes:** button green #16A34A + white (~3.3:1, failed AA) → action green #15803D (5.0:1); secondary text #6B7280 → #475569 (7.5:1 on white); energy tags changed to dark-text-on-tint; error darkened to #B91C1C. All text now ≥ 4.5:1.  
+* **Buttons:** solid green pill (soft shadow, hover lift, pressed + focus-visible states) for the driving-critical action; quiet hairline button for secondary; small + disabled variants added.
+
+## **v1 — Initial preview (superseded)**
+
+* Dark header, card grid, system font, original greens/grays. Kept in git history (`5b01b1f` and earlier).
+

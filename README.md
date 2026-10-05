@@ -26,13 +26,24 @@ Answer: **"Where can I get the energy I need, how much will it cost, and how do 
 ```
 TankUp/
 ├── README.md
+├── design.html          # design system preview (open in browser)
+├── prototype.html       # clickable phone mockup
+├── demo.html            # full interactive web demo
+├── .env.example         # copy to .env (never commit real keys)
 └── docs/
-    └── TankUp — Product Requirements Document.md
+    ├── TankUp-PRD.md
+    └── Implementation-Plan.md
 ```
+
+## Branches
+
+- `main` — stable, releasable. Protected.
+- `dev` — integration for features. PRs target `dev`.
+- `feat/<name>` — one branch per feature, merged into `dev`.
 
 ## Product docs
 
-Full spec: `docs/TankUp — Product Requirements Document.md`
+Full spec: `docs/TankUp-PRD.md`
 
 Key sections:
 - §5 Core user flow: Open → vehicle type → map → search/filter → details → directions → navigate
