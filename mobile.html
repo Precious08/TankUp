@@ -108,6 +108,14 @@
   #toast{position:absolute;bottom:120px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:13.5px;
     font-weight:600;border-radius:999px;padding:11px 20px;z-index:60;display:none;white-space:nowrap;box-shadow:0 10px 30px rgba(0,0,0,.35)}
   .me-pulse{position:absolute;border-radius:50%;background:rgba(37,99,235,.15);transform:translate(-50%,-50%);z-index:3}
+  /* driving mode: nothing on screen except map + nav card */
+  #phone.naving #pop{display:none!important}
+  #phone.naving #sheet{display:none!important}
+  #phone.naving #ctl{display:none!important}
+  #phone.naving .pin{opacity:.28}
+  #phone.naving .pin.dest{opacity:1}
+  #phone.naving .pin .pv{display:none!important}
+  #phone.naving .pin.dest .d{outline:3px solid #fff;outline-offset:2px;box-shadow:0 0 0 6px rgba(21,128,61,.45),0 2px 6px rgba(0,0,0,.4)}
 </style>
 </head>
 <body>
@@ -251,7 +259,7 @@ function render(){
   const items=pool();
   pinsEl.innerHTML=items.map(s=>{const sx=(X(s.lng)-V.cx)*V.z+w/2, sy=(Y(s.lat)-V.cy)*V.z+h/2;
     if(sx<-40||sy<-60||sx>w+40||sy>h+60)return "";
-    return `<div class="pin ${S.sel===s.id?"sel":""}" data-id="${s.id}" style="left:${sx}px;top:${sy}px">
+    return `<div class="pin ${S.sel===s.id?"sel":""} ${S.nav===s.id?"dest":""}" data-id="${s.id}" style="left:${sx}px;top:${sy}px">
       <div class="d" style="background:${FC[s.fuels[0]]}"></div></div>`;}).join("");
   pinsEl.querySelectorAll(".pin").forEach(p=>p.addEventListener("pointerup",e=>{e.stopPropagation();openPop(+p.dataset.id);}));
   if(S.pos){const mx=(X(S.pos.lng)-V.cx)*V.z+w/2,my=(Y(S.pos.lat)-V.cy)*V.z+h/2;
@@ -415,7 +423,11 @@ function startNav(id,quiet){
      {t:`Arrive at ${s.name.split("—")[0].trim()}`,d:s.open?"Open":"Closed"}];
     S.stepIdx=0;S.arrived=false;S.navK=k;
   }
-  renderNav();$("navb").classList.add("on");if(!quiet)toast("Navigating — drive safe 🛣️");
+  clearInterval(S.navTimer);
+  $("phone").classList.add("naving");
+  renderNav();render();$("navb").classList.add("on");if(!quiet)toast("Navigating — drive safe 🛣️");
+  // hands-free: steps advance on their own like live GPS guidance, no taps needed
+  S.navTimer=setInterval(()=>{if(S.stepIdx<S.navSteps.length){advanceStep();}},8000);
 }
 function renderNav(){
   const s=ST.find(x=>x.id===S.nav);if(!s)return;
@@ -423,19 +435,20 @@ function renderNav(){
   $("navEta").textContent=S.arrived?"You've arrived":(k==null?"On your way":`${Math.max(1,Math.round(k/25*60))} min · ${k.toFixed(1)} km`);
   $("navRd").textContent=S.arrived?`${s.name}, ${s.area}`:`Step ${Math.min(i+1,n)} of ${n} · to ${s.name.split("—")[0].trim()}`;
   $("navSteps").innerHTML=S.arrived?`<div id="navArrive">🎉 Welcome to ${s.name} — ${price(s)} · ${s.avail}</div>`
-   :S.navSteps.map((st,j)=>`<div class="stp ${j<i?"done":""} ${j===i?"cur":""}"><span>${j+1}. ${st.t}</span>`
-    +(j===i?`<button class="nx" onclick="advanceStep()">Done →</button>`:`<b>${j<i?"done":st.d}</b>`)+`</div>`).join("");
+   :S.navSteps.map((st,j)=>`<div class="stp ${j<i?"done":""} ${j===i?"cur":""}"><span>${j+1}. ${st.t}</span><b>${j<i?"✓":st.d}</b></div>`).join("");
   $("navSt").innerHTML=`<b>${s.name}</b> <span>· ${s.fuels.join(" · ")}</span>
    <div class="p">${price(s)} <span>· ${s.avail} · ${s.hours} · ${s.rate} ★</span></div>`;
   $("muteBtn").textContent=S.voice?"🔊 Voice on":"🔇 Muted";
 }
 function advanceStep(){
+  if(!S.navSteps)return;
   S.stepIdx++;
-  if(S.stepIdx>=S.navSteps.length){S.arrived=true;toast("You've arrived 🎉");}
+  if(S.stepIdx>=S.navSteps.length){S.arrived=true;clearInterval(S.navTimer);toast("You've arrived 🎉");}
   renderNav();
 }
-function endNav(){S.nav=null;S.navSteps=null;S.stepIdx=0;S.arrived=false;
- document.querySelector("#routePath")?.remove();$("navb").classList.remove("on");render();}
+function endNav(){S.nav=null;S.navSteps=null;S.stepIdx=0;S.arrived=false;clearInterval(S.navTimer);
+ document.querySelector("#routePath")?.remove();$("navb").classList.remove("on");
+ $("phone").classList.remove("naving");render();renderSheet();}
 
 /* ================= FIRST-RUN: permission → my area ================= */
 function nearestState(lng,lat){
