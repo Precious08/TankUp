@@ -21,7 +21,7 @@
   #base{position:absolute;left:0;top:0;will-change:transform}
   #pins{position:absolute;left:0;top:0;width:0;height:0}
   .pin{position:absolute;transform:translate(-50%,-100%);z-index:5}
-  .pin .d{width:26px;height:26px;border-radius:50% 50% 50% 4px;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+  .pin .d{width:28px;height:28px;border-radius:50% 50% 50% 4px;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 0 0 1px rgba(15,23,42,.55),0 2px 8px rgba(0,0,0,.4)}
   .pin.sel .d{outline:3px solid var(--ink);outline-offset:1px}
   .pin.dim{opacity:.25}
   #meDot{position:absolute;width:20px;height:20px;background:#2563EB;border:4px solid #fff;border-radius:50%;z-index:4;
@@ -97,8 +97,6 @@
   #navSteps .stp.done{opacity:.55}
   #navSteps .stp.done span::before{content:"✓ "}
   #navSteps .stp.cur{background:rgba(74,222,128,.12);border-radius:10px;padding:8px 10px}
-  #navSteps .stp .nx{border:0;border-radius:999px;background:#4ADE80;color:#052E16;font-family:inherit;
-    font-size:12px;font-weight:800;padding:7px 13px;flex-shrink:0}
   #navArrive{background:rgba(74,222,128,.14);border:1px solid rgba(74,222,128,.4);border-radius:12px;
     padding:12px;font-size:14px;font-weight:700;margin-top:10px}
   #navSt{background:rgba(255,255,255,.08);border-radius:12px;padding:10px 12px;margin-top:10px;font-size:13px}
@@ -115,6 +113,21 @@
   .pin:focus .d{outline:3px solid #4ADE80;outline-offset:2px}
   /* driving mode: nothing on screen except map + nav card */
   #phone.naving #pop{display:none!important}
+  #mini{position:absolute;left:12px;right:12px;z-index:16;background:#fff;border-radius:14px;padding:10px 38px 10px 14px;
+    box-shadow:0 10px 28px rgba(15,23,42,.3);display:none;cursor:pointer}
+  #mini .mx{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:50%;
+    border:0;background:#F1F5F9;color:var(--second);font-size:13px}
+  #phone.naving #mini{display:none!important}
+  /* Google-style bottom place card */
+  #place{position:absolute;left:0;right:0;bottom:0;z-index:30;background:#fff;border-radius:22px 22px 0 0;
+    box-shadow:0 -10px 34px rgba(15,23,42,.25);display:none;flex-direction:column;max-height:74%}
+  #place.on{display:flex}
+  #pgrab{padding:10px 0 2px;touch-action:none;cursor:grab}
+  #pgrab i{display:block;width:46px;height:5px;border-radius:99px;background:#E2E8F0;margin:0 auto}
+  #pbody{overflow-y:auto;padding:2px 18px calc(18px + env(safe-area-inset-bottom))}
+  #pbody h3{margin:8px 40px 0 0;font-size:20px}
+  #place{transition:transform .18s ease}  .pact{display:flex;gap:8px;margin:14px 0 4px}
+  .pact .btn{min-height:48px;font-size:14px}
   #phone.naving #sheet{display:none!important}
   #phone.naving #ctl{display:none!important}
   #phone.naving .pin{opacity:.28}
@@ -147,6 +160,8 @@
   </div>
 
   <div id="pop"></div>
+  <div id="mini" onclick="if(S.sel)openDetails(S.sel)"></div>
+  <div id="place"><div id="pgrab"><i></i></div><div id="pbody"></div></div>
 
   <div id="sheet">
     <div id="grab"><i></i></div>
@@ -166,9 +181,11 @@
   <div id="toast"></div>
 </div>
 <script src="data/stations.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.local.js"></script>
 <script>
 /* ================= DATA (sample — verify before launch) ================= */
-const ST=TANKUP_STATIONS;
+let ST=TANKUP_STATIONS;
 const STATES=[...new Set(ST.map(s=>s.state))].sort();const FC={Petrol:"#B45309",CNG:"#075985",EV:"#5B21B6"};
 const FT={Petrol:["#FEF3C7","#B45309"],CNG:["#E0F2FE","#075985"],EV:["#EDE9FE","#5B21B6"]};
 
@@ -231,7 +248,6 @@ function render(){
     el.style.left=sx+"px";el.style.top=sy+"px";}
   if(S.pos){const mx=(X(S.pos.lng)-V.cx)*V.z+w/2,my=(Y(S.pos.lat)-V.cy)*V.z+h/2;
     const me=$("meDot");me.style.display="block";me.style.left=mx+"px";me.style.top=my+"px";}
-  if(S.sel)positionPop(true);
 }
 function pool(){const q=S.q.toLowerCase();return ST.filter(s=>{
   if(S.state!=="All"&&s.state!==S.state)return false;
@@ -255,7 +271,9 @@ function recenter(){if(!S.pos){fitState(S.state);toast("No GPS fix — showing "
  V.cx=X(S.pos.lng);V.cy=Y(S.pos.lat);V.z=Math.max(V.z,2.2);S.sel=null;closePop();render();renderSheet();}
 /* drag + pinch */
 const ptrs=new Map();let pinchD=0;
+let tapT=0,tapX=0,tapY=0;
 mapEl.addEventListener("pointerdown",e=>{if(e.target.closest(".pin"))return; // let pin taps through
+ tapT=Date.now();tapX=e.clientX;tapY=e.clientY;
  mapEl.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
  if(ptrs.size===2){const p=[...ptrs.values()];pinchD=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);}});
 mapEl.addEventListener("pointermove",e=>{if(!ptrs.has(e.pointerId))return;
@@ -277,11 +295,17 @@ mapEl.addEventListener("keydown",e=>{const step=120/V.z;
  else if(e.key==="-"||e.key==="_"){zoomBy(1/1.25);}
  else return;e.preventDefault();});
 let lastTap=0;
-mapEl.addEventListener("pointerup",e=>{const n=Date.now();if(n-lastTap<300){const r=mapEl.getBoundingClientRect();zoomBy(1.6,e.clientX-r.left,e.clientY-r.top);}lastTap=n;});
+mapEl.addEventListener("pointerup",e=>{
+ // single tap on empty map = go back: dismiss card, collapse sheet to peek
+ if(Date.now()-tapT<300&&Math.hypot(e.clientX-tapX,e.clientY-tapY)<10&&ptrs.size<=1){
+  if($("place").classList.contains("on"))closeDetails();
+  else if(S.sel)hidePop();else closePop();
+  if(typeof snap!=="undefined"&&snap!==0){snap=0;renderSheet();}}
+ const n=Date.now();if(n-lastTap<300){const r=mapEl.getBoundingClientRect();zoomBy(1.6,e.clientX-r.left,e.clientY-r.top);}lastTap=n;});
 
 /* ================= POPUP CARD (above the pin) ================= */
 function openPop(id){
-  const s=ST.find(x=>x.id===id);if(!s)return;S.sel=id;render();
+  const s=ST.find(x=>x.id===id);if(!s)return;closeDetails();S.sel=id;hideMini();render();
   const w=vw(),sx=(X(s.lng)-V.cx)*V.z+w/2,sy=(Y(s.lat)-V.cy)*V.z+vh()/2;
   const below=sy<200, pop=$("pop");
   pop.innerHTML=`<button class="x" onclick="closePop()">✕</button>
@@ -294,8 +318,19 @@ function openPop(id){
   const hh=pop.offsetHeight||170;pop.style.visibility="";
   pop.style.top=below?(sy+16)+"px":Math.max(86,sy-hh-30)+"px";
 }
-function positionPop(fromRender){if(S.sel&&!fromRender)openPop(S.sel);}
-function closePop(){S.sel=null;$("pop").classList.remove("on");render();}
+function closePop(){S.sel=null;$("pop").classList.remove("on");hideMini();render();}
+function hidePop(){ // card away, mini-bar stays docked, pin stays highlighted
+  const s=ST.find(x=>x.id===S.sel);$("pop").classList.remove("on");
+  if(!s){hideMini();render();return;}
+  const m=$("mini");
+  m.innerHTML=`<div style="font-weight:800;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.name}</div>
+   <div style="font-size:12px;color:var(--second)">${price(s)} · ${s.open?"Open":"Closed"} · ${s.avail}</div>
+   <button class="mx" aria-label="Clear selection" onclick="event.stopPropagation();closePop()">✕</button>`;
+  m.style.display="block";positionMini();render();
+}
+function hideMini(){$("mini").style.display="none";}
+function positionMini(){const m=$("mini");if(!m||m.style.display==="none")return;
+ m.style.bottom=($("sheet").offsetHeight+10)+"px";}
 
 /* ================= SHEET / SEARCH / STATES ================= */
 const SNAPS=[110,0.42,0.7];let snap=1;
@@ -317,11 +352,17 @@ function renderSheet(){
      <div class="pr">${price(s)}<small>${s.fuels.join(" · ")}</small></div></div>`).join("")
    :(near?`<div style="padding:22px;text-align:center;color:var(--second);font-size:14px">No stations here — try another state or fuel.</div>`
     :`<div style="padding:22px;text-align:center;color:var(--second);font-size:14px">Nothing saved yet — open a station and tap ♡ Save.</div>`);
+  positionMini();
 }
 function focusStation(id){
   const s=ST.find(x=>x.id===id);V.cx=X(s.lng);V.cy=Y(s.lat);V.z=Math.max(V.z,2.4);
   openPop(id);renderSheet();
 }
+$("list").onclick=e=>{if(e.target.closest(".row")||e.target.closest("button"))return;
+ if(snap!==0){snap=0;renderSheet();}};
+$("sheetTitle").onclick=e=>{if(e.target.closest("button"))return;
+ if(snap!==0){snap=0;renderSheet();}};
+$("veil").addEventListener("click",e=>{if(e.target===$("veil"))closeVeil();});
 $("q").addEventListener("input",e=>{S.q=e.target.value;$("qclear").classList.toggle("on",!!S.q);renderSheet();
  const items=pool();if(S.q&&items.length&&snap===0){snap=1;renderSheet();}});
 $("q").addEventListener("keydown",e=>{if(e.key==="Enter"){const items=pool();if(items.length)focusStation(items[0].id);}});
@@ -360,26 +401,38 @@ function closeVeil(){$("veil").classList.remove("on");}
 
 /* ================= DETAILS + NAV ================= */
 function openDetails(id){
-  const s=ST.find(x=>x.id===id);closePop();
+  const s=ST.find(x=>x.id===id);if(!s)return;S.sel=id;closePop();hideMini();
   const key=s.fuels.includes("Petrol")?"Petrol":s.fuels[0];
   const rows=ST.filter(x=>x.state===s.state&&x.fuels.includes(key)&&x.open).sort((a,b)=>a.pp-b.pp).slice(0,3);
   const best=rows.length?Math.min(...rows.map(r=>r.pp)):s.pp;
-  $("veilCard").innerHTML=`
+  $("pbody").innerHTML=`
    <h3>${s.name}</h3><p>${s.addr}, ${s.lga} · ${s.state} · ${dstr(s)}</p>
    <div style="display:flex;gap:6px;margin:10px 0">${s.fuels.map(f=>`<span class="tag" style="background:${FT[f][0]};color:${FT[f][1]}">${f.toUpperCase()}</span>`).join("")}</div>
    <div style="font-size:28px;font-weight:800">${price(s)}</div>
    <div class="kv"><span>Availability</span><b>${s.avail}</b></div>
    <div class="kv"><span>Hours</span><b>${s.hours}</b></div>
    <div class="kv"><span>Rating</span><b>${s.rate} ★ (${s.rc})</b></div>
-   <button class="bigbtn" style="background:var(--primary);color:#fff" onclick="startNav(${s.id})">Get Directions</button>
-   <button class="bigbtn ghost" onclick="toggleSave(${s.id})">${S.saved.has(id)?"♥ Saved — tap to remove":"♡ Save station"}</button>
+   <div class="pact"><button class="btn btn-p" onclick="startNav(${s.id})">Directions</button>
+    <button class="btn btn-q" onclick="toggleSave(${s.id})">${S.saved.has(id)?"♥ Saved":"♡ Save"}</button></div>
    <h3 style="font-size:16px;margin-top:14px">Compare in ${s.state}</h3>
    <table style="width:100%;border-collapse:collapse;font-size:13px">${rows.map(r=>
     `<tr><td style="padding:8px 0;border-top:1px solid var(--line)">${r.name.split("—")[0].trim()}</td>
-     <td style="text-align:right;font-weight:800;${r.pp===best?"color:var(--primary)":""}">${price(r)}</td></tr>`).join("")}</table>
-   <button class="bigbtn ghost" onclick="closeVeil()">Close</button>`;
-  $("veil").classList.add("on");
+     <td style="text-align:right;font-weight:800;${r.pp===best?"color:var(--primary)":""}">${price(r)}</td></tr>`).join("")}</table>`;
+  $("place").classList.add("on");$("sheet").style.display="none";render();
 }
+function closeDetails(){$("place").classList.remove("on");$("sheet").style.display="";
+ if(S.sel)hidePop();else{render();renderSheet();}}
+
+// drag the place card down with your finger to dismiss it
+(()=>{const g=$("pgrab"),pl=$("place");if(!g)return;let y0=0,dy=0;
+ g.addEventListener("pointerdown",e=>{e.preventDefault();y0=e.clientY;dy=0;
+  pl.style.transition="none";
+  try{g.setPointerCapture(e.pointerId);}catch(_){}
+  const mv=ev=>{dy=Math.max(0,ev.clientY-y0);pl.style.transform=`translateY(${dy}px)`;};
+  const up=()=>{pl.style.transition="";pl.style.transform="";
+   if(dy>90)closeDetails();
+   g.removeEventListener("pointermove",mv);g.removeEventListener("pointerup",up);g.removeEventListener("pointercancel",up);};
+  g.addEventListener("pointermove",mv);g.addEventListener("pointerup",up);g.addEventListener("pointercancel",up);});})();
 function toggleSave(id){S.saved.has(id)?S.saved.delete(id):S.saved.add(id);
  store("saved",[...S.saved]);renderSheet();toast(S.saved.has(id)?"Saved ♥":"Removed");openDetails(id);}
 function speak(t){try{
@@ -453,7 +506,7 @@ function buildSteps(path,s){
   return {steps,total};
 }
 function startNav(id,quiet){
-  const s=ST.find(x=>x.id===id);S.nav=id;closeVeil();closePop();
+  const s=ST.find(x=>x.id===id);S.nav=id;closeVeil();closePop();closeDetails();
   const o=S.pos?{lng:S.pos.lng,lat:S.pos.lat}:w2ll(V.cx,V.cy+(vh()/2)/V.z);
   const B=gridFor(o,s),nodes=astar(B,snapN(B,o),snapN(B,s));
   const path=[o,...nodes.slice(1,-1),{lng:s.lng,lat:s.lat}];
@@ -530,7 +583,32 @@ function askGeo(){
     ()=>chooseState(),{timeout:6000});
 }
 window.addEventListener("resize",render);
-drawBase();firstRun();
+/* ---------- live data (Supabase; silent fallback to bundled sample) ---------- */
+function dbRow(r,i){
+  let lng=0,lat=0;const loc=r.location;
+  if(typeof loc==="string"){const m=loc.match(/(-?[\d.]+)\s+(-?[\d.]+)/);if(m){lng=+m[1];lat=+m[2];}}
+  else if(loc&&loc.coordinates){lng=+loc.coordinates[0];lat=+loc.coordinates[1];}
+  let av="Available";try{const o=typeof r.availability==="string"?JSON.parse(r.availability):(r.availability||{});
+    const vs=Object.values(o);if(vs.length){const t=String(vs[0]);av=t.charAt(0).toUpperCase()+t.slice(1);}}catch(e){}
+  return {id:i+1,name:r.name,state:r.state||"Lagos",lga:r.lga||"",area:r.area,addr:r.address,lng,lat,
+   fuels:r.fuels&&r.fuels.length?r.fuels:["Petrol"],pp:r.petrol_price??r.cng_price??r.ev_price??0,
+   unit:r.price_unit||"/L",open:r.is_open!==false,avail:av,hours:r.hours||"Open 24 hrs",
+   rate:r.rating??4,rc:r.review_count??0};
+}
+async function loadLive(){
+  try{
+    const c=window.TANKUP_CONFIG||{};
+    if(!window.supabase||!c.SUPABASE_URL||/xyzcompany|paste-your/.test(c.SUPABASE_URL+(c.SUPABASE_ANON_KEY||"")))return false;
+    const cli=window.supabase.createClient(c.SUPABASE_URL,c.SUPABASE_ANON_KEY);
+    const res=await cli.from("stations").select("*").order("name").limit(500);
+    if(res.error||!res.data||!res.data.length)return false;
+    return res.data.map(dbRow);
+  }catch(e){return false;}
+}
+drawBase();
+(async()=>{const live=await loadLive();
+ if(live&&live.length){ST=live;toast("Live data connected ✓");}
+ firstRun();})();
 </script>
 </body>
 </html>

@@ -109,9 +109,11 @@ Exit: contract doc reviewed against §16/§17/§27; seed data queryable; avatar 
 
 ---
 
-## Phase 4 — Backend build
+## Phase 4 — Backend build — MOSTLY DONE (live project running)
 
 Goal: working API + auth + storage before app features.
+
+Done: `tankup-dev` live, migrations 0001–0003 + both seeds run (215 rows verified), Email OTP on, `avatars` bucket public with policies, demos reading live with bundled fallback (`config.local.js`, gitignored). Left: Google OAuth (needs Cloud Console session), `tankup-prod` clone before launch.
 
 - [ ] Supabase project (dev + prod = the 2 Free projects), migrations for all tables, RLS policies, seed script.
 - [ ] Auth: email OTP + Google/Apple + guest→account migration. Phone (SMS) OTP explicitly deferred — SMS is never free; use Termii pay-as-you-go only after traction.
@@ -248,6 +250,11 @@ Upscale menu (in order, each only when a free limit forces it):
 | 5 | Need funnels/experiments | PostHog/Mixpanel |
 | 6 | Crash triage outgrows Crashlytics | Sentry |
 | 7 | Shipping iOS | Apple Developer $99/yr |
+
+## Parked (resume on owner's word — do not start unprompted)
+
+1. **Mobile feature gap** (est. ~1.5h in 4 rounds): compare tray → reviews → trips planner → profile/vehicles in `mobile.html`. Plan agreed, awaiting "start".
+2. **Real station data hunt**: retry OSM Overpass pull when servers recover, then convert via `scripts/` pipeline.
 
 ## Appendix C — What to build first (if time-boxed)
 

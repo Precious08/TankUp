@@ -55,6 +55,15 @@ class TankColors {
   static const int errorL = 0xFFB91C1C;
   static const int errorD = 0xFFFCA5A5;
   static const int userBlue = 0xFF2563EB; // location dot, both themes
+
+  // Map pins: white inner ring + contrasting hairline outside reads on any
+  // background (sunlight fix). Light theme: soft ink hairline; dark theme:
+  // bright outer ring (an ink ring would vanish on dark maps).
+  static const int pinRingInner = 0xFFFFFFFF;
+  static const int pinRingOuterL = 0x8C0F172A; // ~55% ink, 1px
+  static const int pinRingOuterD = 0xE6FFFFFF; // ~90% white, 1.5px
+  static const double pinSize = 28;
+  static const double pinRing = 3;
 }
 
 /// Type scale (logical px). Body never below 16.
