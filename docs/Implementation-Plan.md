@@ -249,6 +249,11 @@ Upscale menu (in order, each only when a free limit forces it):
 | 6 | Crash triage outgrows Crashlytics | Sentry |
 | 7 | Shipping iOS | Apple Developer $99/yr |
 
+## Parked (resume on owner's word — do not start unprompted)
+
+1. **Mobile feature gap** (est. ~1.5h in 4 rounds): compare tray → reviews → trips planner → profile/vehicles in `mobile.html`. Plan agreed, awaiting "start".
+2. **Real station data hunt**: retry OSM Overpass pull when servers recover, then convert via `scripts/` pipeline.
+
 ## Appendix C — What to build first (if time-boxed)
 
 Walking skeleton: Phase 0 → 2 → 3 → 5 → 6 (map + mock stations + card) → demo. Then 4 → 7 → 8 → 9 → 10 → 11.
