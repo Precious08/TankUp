@@ -38,7 +38,7 @@
   #avatar{width:48px;height:48px;flex-shrink:0;border-radius:50%;border:3px solid #fff;background:var(--primary);color:#fff;
     font-size:18px;font-weight:800;box-shadow:0 4px 12px rgba(15,23,42,.3)}
   /* map controls */
-  #ctl{position:absolute;right:12px;bottom:250px;z-index:15;display:flex;flex-direction:column;gap:8px}
+  #ctl{position:absolute;right:12px;bottom:345px;z-index:15;display:flex;flex-direction:column;gap:8px}
   #ctl button{width:44px;height:44px;border-radius:50%;border:0;background:#fff;font-size:20px;font-weight:800;color:var(--ink);
     box-shadow:0 3px 10px rgba(15,23,42,.28)}
   /* pin popup card */
@@ -90,7 +90,15 @@
   #navb .eta{font-size:22px;font-weight:800}#navb .rd{font-size:13px;color:#B6C0CE;margin-top:3px}
   #navSteps{margin-top:10px;border-top:1px solid rgba(255,255,255,.14)}
   #navSteps .stp{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.14)}
+  #navSteps .stp{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.14);align-items:center}
   #navSteps .stp span{color:#D6DEE8}#navSteps .stp b{color:#fff;white-space:nowrap}
+  #navSteps .stp.done{opacity:.55}
+  #navSteps .stp.done span::before{content:"✓ "}
+  #navSteps .stp.cur{background:rgba(74,222,128,.12);border-radius:10px;padding:8px 10px}
+  #navSteps .stp .nx{border:0;border-radius:999px;background:#4ADE80;color:#052E16;font-family:inherit;
+    font-size:12px;font-weight:800;padding:7px 13px;flex-shrink:0}
+  #navArrive{background:rgba(74,222,128,.14);border:1px solid rgba(74,222,128,.4);border-radius:12px;
+    padding:12px;font-size:14px;font-weight:700;margin-top:10px}
   #navSt{background:rgba(255,255,255,.08);border-radius:12px;padding:10px 12px;margin-top:10px;font-size:13px}
   #navSt b{color:#fff}#navSt span{color:#B6C0CE}
   #navSt .p{color:#4ADE80;font-weight:800;font-size:15px;margin-top:2px}
@@ -400,20 +408,34 @@ function startNav(id,quiet){
   const d=`M ${ox} ${oy} L ${ox} ${Y(s.lat)} L ${X(s.lng)} ${Y(s.lat)}`;
   document.querySelector("#routePath")?.remove();
   world.insertAdjacentHTML("beforeend",`<path id="routePath" d="${d}" stroke="#15803D" stroke-width="16" fill="none" stroke-linecap="round"/>`);
-  const k=S.pos?havKm(S.pos.lat,S.pos.lng,s.lat,s.lng):null;
-  const mins=k==null?null:Math.max(1,Math.round(k/25*60));
-  $("navEta").textContent=k==null?"On your way":`${mins} min · ${k.toFixed(1)} km`;
-  $("navRd").textContent=k==null?`To ${s.name}, ${s.area} — enable location for live ETA`
-   :`To ${s.name} — ${S.voice?"voice guidance on":"voice muted"}`;
-  $("navSteps").innerHTML=`
-   <div class="stp"><span>1. Head toward ${s.area}</span><b>${k==null?s.lga:k.toFixed(1)+" km"}</b></div>
-   <div class="stp"><span>2. Arrive at ${s.name.split("—")[0].trim()}</span><b>${s.open?"Open":"Closed"}</b></div>`;
+  if(!quiet||!S.navSteps){ // fresh navigation builds the step list once
+    const k=S.pos?havKm(S.pos.lat,S.pos.lng,s.lat,s.lng):null;
+    S.navSteps=[
+     {t:`Head toward ${s.area}`,d:k==null?"ahead":k.toFixed(1)+" km"},
+     {t:`Arrive at ${s.name.split("—")[0].trim()}`,d:s.open?"Open":"Closed"}];
+    S.stepIdx=0;S.arrived=false;S.navK=k;
+  }
+  renderNav();$("navb").classList.add("on");if(!quiet)toast("Navigating — drive safe 🛣️");
+}
+function renderNav(){
+  const s=ST.find(x=>x.id===S.nav);if(!s)return;
+  const k=S.navK,n=S.navSteps.length,i=S.stepIdx;
+  $("navEta").textContent=S.arrived?"You've arrived":(k==null?"On your way":`${Math.max(1,Math.round(k/25*60))} min · ${k.toFixed(1)} km`);
+  $("navRd").textContent=S.arrived?`${s.name}, ${s.area}`:`Step ${Math.min(i+1,n)} of ${n} · to ${s.name.split("—")[0].trim()}`;
+  $("navSteps").innerHTML=S.arrived?`<div id="navArrive">🎉 Welcome to ${s.name} — ${price(s)} · ${s.avail}</div>`
+   :S.navSteps.map((st,j)=>`<div class="stp ${j<i?"done":""} ${j===i?"cur":""}"><span>${j+1}. ${st.t}</span>`
+    +(j===i?`<button class="nx" onclick="advanceStep()">Done →</button>`:`<b>${j<i?"done":st.d}</b>`)+`</div>`).join("");
   $("navSt").innerHTML=`<b>${s.name}</b> <span>· ${s.fuels.join(" · ")}</span>
    <div class="p">${price(s)} <span>· ${s.avail} · ${s.hours} · ${s.rate} ★</span></div>`;
   $("muteBtn").textContent=S.voice?"🔊 Voice on":"🔇 Muted";
-  $("navb").classList.add("on");if(!quiet)toast("Navigating — drive safe 🛣️");
 }
-function endNav(){S.nav=null;document.querySelector("#routePath")?.remove();$("navb").classList.remove("on");render();}
+function advanceStep(){
+  S.stepIdx++;
+  if(S.stepIdx>=S.navSteps.length){S.arrived=true;toast("You've arrived 🎉");}
+  renderNav();
+}
+function endNav(){S.nav=null;S.navSteps=null;S.stepIdx=0;S.arrived=false;
+ document.querySelector("#routePath")?.remove();$("navb").classList.remove("on");render();}
 
 /* ================= FIRST-RUN: permission → my area ================= */
 function nearestState(lng,lat){
