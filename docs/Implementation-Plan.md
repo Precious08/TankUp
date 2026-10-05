@@ -85,7 +85,8 @@ Exit: 5 ADRs merged; folder skeleton exists with no dead code.
 Goal: backend and app agree before coding (§27.9).
 
 - [x] Schema in `supabase/migrations/0001_schema.sql` (9 tables, PostGIS geo, one-active-vehicle guard, `updated_at` triggers, full RLS, `avatars` bucket ≤5MB).
-- [x] Seed in `supabase/seed.sql` (30 Lagos stations, 7 districts, mixed fuels/prices/availability).
+- [x] Seed in `supabase/seed.sql` (wave 1: 30 Lagos stations, mixed fuels/prices/availability).
+- [x] National scope: `state/lga/lcda` on stations (`0002_coverage.sql` + Lagos backfill); rollout waves + gates in `supabase/seed-national.md` (36 states + FCT, every LGA/LCDA).
 - [x] Contract in `docs/api/contract.md` (endpoints, avatar flow, validation, RLS summary).
 
 Tables (Supabase Postgres):

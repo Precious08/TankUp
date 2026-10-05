@@ -1,5 +1,8 @@
--- TankUp seed — 30 Lagos stations (demo data, prices illustrative in NGN).
--- Run after 0001_schema.sql. To reseed cleanly: delete from stations; then re-run.
+-- TankUp seed — wave 1: 30 Lagos stations (demo data, prices illustrative in NGN).
+-- National rollout (36 states + FCT, every LGA/LCDA) ingests per state via
+-- supabase/seed-national.md; this file stays as the Lagos sample.
+-- Run after 0001_schema.sql (+ 0002 backfills LGA). To reseed cleanly:
+-- delete from stations; then re-run.
 
 insert into stations
   (name, area, address, location, fuels, petrol_price, cng_price, ev_price,
