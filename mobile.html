@@ -195,7 +195,12 @@
 <script>
 /* ================= DATA (sample — verify before launch) ================= */
 let ST=TANKUP_STATIONS;
-const STATES=[...new Set(ST.map(s=>s.state))].sort();const FC={Petrol:"#B45309",CNG:"#075985",EV:"#5B21B6"};
+const STATES=[...new Set(ST.map(s=>s.state))].sort();
+const REV_SEED={"TotalEnergies — Lekki P1":[{t:"Fast pumps, accurate meter.",r:5},{t:"Queue at rush hour.",r:3}],
+ "Mobil — Admiralty":[{t:"Petrol ran low on Sunday.",r:2}]};
+let REV=null; // lazy: store() is declared further down
+function getREV(){if(!REV)REV=Object.assign({},REV_SEED,store("reviews")||{});return REV;}
+function saveREV(){store("reviews",REV);}const FC={Petrol:"#B45309",CNG:"#075985",EV:"#5B21B6"};
 const FT={Petrol:["#FEF3C7","#B45309"],CNG:["#E0F2FE","#075985"],EV:["#EDE9FE","#5B21B6"]};
 
 /* ================= STATE ================= */
@@ -422,6 +427,9 @@ function openDetails(id){
    <div class="kv"><span>Availability</span><b>${s.avail}</b></div>
    <div class="kv"><span>Hours</span><b>${s.hours}</b></div>
    <div class="kv"><span>Rating</span><b>${s.rate} ★ (${s.rc})</b></div>
+   <h3 style="font-size:16px;margin-top:14px">Reviews (${(getREV()[s.name]||[]).length})</h3>
+   ${((getREV()[s.name]||[]).length?getREV()[s.name].map(v=>`<div class="kv"><span>${v.t}</span><b style="color:var(--petrol, #B45309)">${v.r}★</b></div>`).join(""):`<div style="font-size:13px;color:var(--second)">No reviews yet — be the first.</div>`)}
+   <button class="btn btn-q" style="width:100%;margin-top:8px" onclick="addReview(${s.id})">Write a review</button>
    <div class="pact"><button class="btn btn-p" onclick="startNav(${s.id})">Directions</button>
     <button class="btn btn-q" onclick="toggleSave(${s.id})">${S.saved.has(id)?"♥ Saved":"♡ Save"}</button></div>
    <button class="btn btn-q" style="width:100%;margin-top:8px" onclick="toggleCmp(${s.id})">${S.cmp.includes(id)?"✓ In comparison — tap to remove":"＋ Compare with others"}</button>
@@ -446,6 +454,13 @@ function closeDetails(){$("place").classList.remove("on");$("sheet").style.displ
   g.addEventListener("pointermove",mv);g.addEventListener("pointerup",up);g.addEventListener("pointercancel",up);});})();
 function toggleSave(id){S.saved.has(id)?S.saved.delete(id):S.saved.add(id);
  store("saved",[...S.saved]);renderSheet();toast(S.saved.has(id)?"Saved ♥":"Removed");openDetails(id);}
+function addReview(id){
+  const s=ST.find(x=>x.id===id);if(!s)return;
+  const t=prompt("Your review of "+s.name+":");if(!t)return;
+  let r=+(prompt("Rating 1-5:")||"5");r=Math.min(5,Math.max(1,r||5));
+  (getREV()[s.name]=getREV()[s.name]||[]).unshift({t,r});s.rc++;saveREV();
+  toast("Review posted — thanks!");openDetails(id);
+}
 function toggleCmp(id){
   if(S.cmp.includes(id))S.cmp=S.cmp.filter(c=>c!==id);
   else{if(S.cmp.length>=3){toast("Comparison holds 3 max — remove one first");return;}S.cmp.push(id);toast("Added to comparison");}
