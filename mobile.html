@@ -352,14 +352,16 @@ function positionMini(){const m=$("mini");if(!m||m.style.display==="none")return
 const SNAPS=[110,0.42,0.7];let snap=1;
 function sheetH(){return snap===0?SNAPS[0]:Math.round(vh()*SNAPS[snap]);}
 function renderSheet(){
+  if(S.mode==="trips")return renderTrips();
   const near=S.mode==="near";
   const items=(near?[...pool()]:ST.filter(s=>S.saved.has(s.id)))
    .sort((a,b)=>(S.pos?havKm(S.pos.lat,S.pos.lng,a.lat,a.lng):0)-(S.pos?havKm(S.pos.lat,S.pos.lng,b.lat,b.lng):0));
   $("sheetTitle").innerHTML=`
    <div style="display:flex;gap:8px;margin-bottom:6px">
-    <button class="btn ${near?"btn-p":"btn-q"}" style="min-height:38px;font-size:13px" onclick="S.mode='near';renderSheet()">Nearby</button>
-    <button class="btn ${near?"btn-q":"btn-p"}" style="min-height:38px;font-size:13px" onclick="S.mode='saved';renderSheet()">♥ Saved (${S.saved.size})</button></div>
-   <div>${near?`Near ${S.posLabel}`:"Your saved stations"} <small>· ${items.length} · SAMPLE DATA</small></div>`;
+    <button class="btn ${S.mode==="near"?"btn-p":"btn-q"}" style="min-height:38px;font-size:13px;flex:1" onclick="S.mode='near';renderSheet()">Nearby</button>
+    <button class="btn ${S.mode==="saved"?"btn-p":"btn-q"}" style="min-height:38px;font-size:13px;flex:1" onclick="S.mode='saved';renderSheet()">♥ Saved (${S.saved.size})</button>
+    <button class="btn ${S.mode==="trips"?"btn-p":"btn-q"}" style="min-height:38px;font-size:13px;flex:1" onclick="S.mode='trips';renderSheet()">Trips</button></div>
+   ${S.mode==="trips"?"":`<div>${near?`Near ${S.posLabel}`:"Your saved stations"} <small>· ${items.length} · SAMPLE DATA</small></div>`}`;
   $("sheet").style.height=sheetH()+"px";
   $("list").innerHTML=items.length?items.map(s=>
    `<div class="row" onclick="focusStation(${s.id})">
@@ -373,6 +375,46 @@ function renderSheet(){
 function focusStation(id){
   const s=ST.find(x=>x.id===id);V.cx=X(s.lng);V.cy=Y(s.lat);V.z=Math.max(V.z,2.4);
   openPop(id);renderSheet();
+}
+function renderTrips(){
+  $("sheetTitle").innerHTML=`
+   <div style="display:flex;gap:8px;margin-bottom:6px">
+    <button class="btn btn-q" style="min-height:38px;font-size:13px;flex:1" onclick="S.mode='near';renderSheet()">Nearby</button>
+    <button class="btn btn-q" style="min-height:38px;font-size:13px;flex:1" onclick="S.mode='saved';renderSheet()">♥ Saved (${S.saved.size})</button>
+    <button class="btn btn-p" style="min-height:38px;font-size:13px;flex:1" onclick="S.mode='trips';renderSheet()">Trips</button></div>
+   <div>Plan a route <small>· on-route stations</small></div>`;
+  $("sheet").style.height=sheetH()+"px";
+  const recents=store("trips")||[];
+  $("list").innerHTML=`
+   <div style="display:flex;gap:8px">
+    <div style="flex:1"><label class="lbl" style="font-size:11px;font-weight:800;color:var(--second)">FROM</label>
+     <select id="tFrom" style="font-family:inherit;width:100%;padding:10px;border-radius:10px;border:1.5px solid var(--line)">${STATES.map(t=>`<option ${t===S.state?"selected":""}>${t}</option>`).join("")}</select></div>
+    <div style="flex:1"><label class="lbl" style="font-size:11px;font-weight:800;color:var(--second)">TO</label>
+     <select id="tTo" style="font-family:inherit;width:100%;padding:10px;border-radius:10px;border:1.5px solid var(--line)">${STATES.map(t=>`<option ${t==="Oyo"?"selected":""}>${t}</option>`).join("")}</select></div></div>
+   <button class="btn btn-p" style="width:100%;margin:12px 0" onclick="planTrip()">Find stations on route</button>
+   <div id="tripRes"></div>
+   ${recents.length?`<div style="font-size:12px;font-weight:800;color:var(--second);margin:8px 0 2px">RECENT</div>`+recents.map((t,i)=>
+    `<div class="row" onclick="retrip(${i})"><div><div class="t">${t.from} → ${t.to}</div><div class="s">${t.n} stations · cheapest ${t.best}</div></div></div>`).join(""):""}`;
+  positionMini();positionTray();
+}
+function planTrip(){
+  const a=$("tFrom").value,b=$("tTo").value;
+  const pool=[...ST.filter(s=>(s.state===a||s.state===b)&&s.open)].sort((p,q)=>p.pp-q.pp).slice(0,6);
+  if(!pool.length){$("tripRes").innerHTML=`<div style="padding:14px;text-align:center;color:var(--second);font-size:14px">No open stations on ${a} → ${b} yet.</div>`;return;}
+  const best=pool[0];
+  const recents=store("trips")||[];
+  recents.unshift({from:a,to:b,n:pool.length,best:price(best)});store("trips",recents.slice(0,8));
+  $("tripRes").innerHTML=`<div style="font-size:12px;font-weight:800;color:var(--second);margin:2px 0 4px">CHEAPEST FIRST · ${a} → ${b}</div>`+
+   pool.map(s=>`<div class="row" onclick="focusStation(${s.id})">
+    <div class="rd" style="background:${FC[s.fuels[0]]}"></div>
+    <div><div class="t">${s.name}</div><div class="s">${s.state} · ${s.avail}</div></div>
+    <div class="pr">${price(s)}<small>${s.fuels.join(" · ")}</small></div></div>`).join("");
+  toast(pool.length+" on-route stations found");
+}
+function retrip(i){
+  const t=(store("trips")||[])[i];if(!t)return;
+  S.mode="trips";renderTrips();
+  $("tFrom").value=t.from;$("tTo").value=t.to;planTrip();
 }
 $("list").onclick=e=>{if(e.target.closest(".row")||e.target.closest("button"))return;
  if(snap!==0){snap=0;renderSheet();}};
