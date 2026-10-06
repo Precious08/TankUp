@@ -242,6 +242,7 @@ function render(){
     pinsEl.onkeydown=e=>{const p=e.target.closest&&e.target.closest(".pin");
       if(p&&(e.key==="Enter"||e.key===" ")){e.preventDefault();openPop(+p.dataset.id);}};
   }
+  // every pin shows, always — no clustering, no counts
   for(const s of items){const el=pinById.get(s.id);if(!el)continue;
     const sx=(X(s.lng)-V.cx)*V.z+w/2, sy=(Y(s.lat)-V.cy)*V.z+h/2;
     el.style.display=(sx<-40||sy<-60||sx>w+40||sy>h+60)?"none":"block";
