@@ -429,9 +429,9 @@ function openDetails(id){
    <div class="kv"><span>Rating</span><b>${s.rate} ★ (${s.rc})</b></div>
    <h3 style="font-size:16px;margin-top:14px">Reviews (${(getREV()[s.name]||[]).length})</h3>
    ${((getREV()[s.name]||[]).length?getREV()[s.name].map(v=>`<div class="kv"><span>${v.t}</span><b style="color:var(--petrol, #B45309)">${v.r}★</b></div>`).join(""):`<div style="font-size:13px;color:var(--second)">No reviews yet — be the first.</div>`)}
-   <button class="btn btn-q" style="width:100%;margin-top:8px" onclick="addReview(${s.id})">Write a review</button>
    <div class="pact"><button class="btn btn-p" onclick="startNav(${s.id})">Directions</button>
     <button class="btn btn-q" onclick="toggleSave(${s.id})">${S.saved.has(id)?"♥ Saved":"♡ Save"}</button></div>
+   <button class="btn btn-q" style="width:100%;margin-top:8px" onclick="addReview(${s.id})">Write a review</button>
    <button class="btn btn-q" style="width:100%;margin-top:8px" onclick="toggleCmp(${s.id})">${S.cmp.includes(id)?"✓ In comparison — tap to remove":"＋ Compare with others"}</button>
    <h3 style="font-size:16px;margin-top:14px">Compare in ${s.state}</h3>
    <table style="width:100%;border-collapse:collapse;font-size:13px">${rows.map(r=>
