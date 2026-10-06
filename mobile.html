@@ -118,6 +118,14 @@
   #mini .mx{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:50%;
     border:0;background:#F1F5F9;color:var(--second);font-size:13px}
   #phone.naving #mini{display:none!important}
+  #ctray{position:absolute;left:12px;right:12px;z-index:17;background:var(--ink);color:#fff;border-radius:14px;
+    padding:10px 12px;font-size:13px;font-weight:700;display:none;align-items:center;gap:8px;
+    box-shadow:0 10px 28px rgba(0,0,0,.35)}
+  #ctray.on{display:flex}
+  #ctray .mini{font-family:inherit;font-size:12px;font-weight:800;border:0;border-radius:999px;padding:8px 14px;cursor:pointer}
+  #ctray .go{background:#4ADE80;color:#052E16}
+  #ctray .clr{background:rgba(255,255,255,.14);color:#fff}
+  #phone.naving #ctray{display:none!important}
   /* Google-style bottom place card */
   #place{position:absolute;left:0;right:0;bottom:0;z-index:30;background:#fff;border-radius:22px 22px 0 0;
     box-shadow:0 -10px 34px rgba(15,23,42,.25);display:none;flex-direction:column;max-height:74%}
@@ -161,6 +169,7 @@
 
   <div id="pop"></div>
   <div id="mini" onclick="if(S.sel)openDetails(S.sel)"></div>
+  <div id="ctray"></div>
   <div id="place"><div id="pgrab"><i></i></div><div id="pbody"></div></div>
 
   <div id="sheet">
@@ -191,7 +200,7 @@ const FT={Petrol:["#FEF3C7","#B45309"],CNG:["#E0F2FE","#075985"],EV:["#EDE9FE","
 
 /* ================= STATE ================= */
 const store=(k,v)=>v===undefined?JSON.parse(localStorage.getItem("tankup."+k)||"null"):localStorage.setItem("tankup."+k,JSON.stringify(v));
-const S={state:"Lagos",lga:"All",pos:null,posLabel:"Lagos",sel:null,nav:null,q:"",fuel:"All",mode:"near",voice:true,
+const S={state:"Lagos",lga:"All",pos:null,posLabel:"Lagos",sel:null,nav:null,q:"",fuel:"All",mode:"near",voice:true,cmp:[],
  saved:new Set(store("saved")||[])};
 const $=id=>document.getElementById(id);
 function toast(m){const t=$("toast");t.textContent=m;t.style.display="block";clearTimeout(t._x);t._x=setTimeout(()=>t.style.display="none",1800);}
@@ -353,7 +362,7 @@ function renderSheet(){
      <div class="pr">${price(s)}<small>${s.fuels.join(" · ")}</small></div></div>`).join("")
    :(near?`<div style="padding:22px;text-align:center;color:var(--second);font-size:14px">No stations here — try another state or fuel.</div>`
     :`<div style="padding:22px;text-align:center;color:var(--second);font-size:14px">Nothing saved yet — open a station and tap ♡ Save.</div>`);
-  positionMini();
+  positionMini();positionTray();
 }
 function focusStation(id){
   const s=ST.find(x=>x.id===id);V.cx=X(s.lng);V.cy=Y(s.lat);V.z=Math.max(V.z,2.4);
@@ -415,6 +424,7 @@ function openDetails(id){
    <div class="kv"><span>Rating</span><b>${s.rate} ★ (${s.rc})</b></div>
    <div class="pact"><button class="btn btn-p" onclick="startNav(${s.id})">Directions</button>
     <button class="btn btn-q" onclick="toggleSave(${s.id})">${S.saved.has(id)?"♥ Saved":"♡ Save"}</button></div>
+   <button class="btn btn-q" style="width:100%;margin-top:8px" onclick="toggleCmp(${s.id})">${S.cmp.includes(id)?"✓ In comparison — tap to remove":"＋ Compare with others"}</button>
    <h3 style="font-size:16px;margin-top:14px">Compare in ${s.state}</h3>
    <table style="width:100%;border-collapse:collapse;font-size:13px">${rows.map(r=>
     `<tr><td style="padding:8px 0;border-top:1px solid var(--line)">${r.name.split("—")[0].trim()}</td>
@@ -436,6 +446,30 @@ function closeDetails(){$("place").classList.remove("on");$("sheet").style.displ
   g.addEventListener("pointermove",mv);g.addEventListener("pointerup",up);g.addEventListener("pointercancel",up);});})();
 function toggleSave(id){S.saved.has(id)?S.saved.delete(id):S.saved.add(id);
  store("saved",[...S.saved]);renderSheet();toast(S.saved.has(id)?"Saved ♥":"Removed");openDetails(id);}
+function toggleCmp(id){
+  if(S.cmp.includes(id))S.cmp=S.cmp.filter(c=>c!==id);
+  else{if(S.cmp.length>=3){toast("Comparison holds 3 max — remove one first");return;}S.cmp.push(id);toast("Added to comparison");}
+  renderTray();if($("place").classList.contains("on"))openDetails(id);
+}
+function renderTray(){
+  const t=$("ctray");
+  if(!S.cmp.length){t.classList.remove("on");return;}
+  t.innerHTML=`⚖️ ${S.cmp.length} to compare <button class="mini go" onclick="showCmp()">Compare</button> <button class="mini clr" onclick="S.cmp=[];renderTray()">Clear</button>`;
+  t.classList.add("on");positionTray();
+}
+function positionTray(){const t=$("ctray");if(!t.classList.contains("on"))return;
+ t.style.bottom=($("sheet").offsetHeight+10)+"px";}
+function showCmp(){
+  const rows=S.cmp.map(id=>ST.find(s=>s.id===id)).filter(Boolean);
+  if(!rows.length)return;
+  const best=Math.min(...rows.map(r=>r.pp));
+  $("veilCard").innerHTML=`<h3>Side by side</h3><p>Cheapest ★ · tap a row to open it</p>
+   ${rows.map(r=>`<div class="kv" onclick="closeVeil();focusStation(${r.id})" style="cursor:pointer">
+    <span>${r.name}<br><small>${r.fuels.join(" · ")} · ${r.avail}</small></span>
+    <b style="${r.pp===best?"color:var(--primary)":""}">${price(r)}${r.pp===best?" ★":""}</b></div>`).join("")}
+   <button class="bigbtn ghost" onclick="closeVeil()">Done</button>`;
+  $("veil").classList.add("on");
+}
 function speak(t){try{
  if(!S.voice||!("speechSynthesis" in window))return;
  speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.rate=1.05;speechSynthesis.speak(u);
