@@ -126,7 +126,7 @@ Exit: Postman/HTTP file runs green against dev; RLS blocks cross-driver reads (t
 
 ---
 
-## Phase 5 — App scaffold + navigation shell (PRD §21)
+## Phase 5 — App scaffold + navigation shell (PRD §21) — SCAFFOLD DONE (in `app/`)
 
 Goal: five tabs with empty-but-routed screens.
 
