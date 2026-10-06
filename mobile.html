@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root{--primary:#15803D;--primary-h:#166534;--ink:#0F172A;--second:#475569;--line:#E8EDF3;
+  :root{--primary:#15803D;--primary-h:#166534;--btn-bg:#15803D;--btn-tx:#ffffff;--ink:#0F172A;--second:#475569;--line:#E8EDF3;
     --petrol:#B45309;--cng:#075985;--ev:#5B21B6;--error:#B91C1C}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{height:100%}
@@ -54,7 +54,7 @@
   #pop .row{display:flex;gap:7px;margin-top:9px}
   #pop .x{position:absolute;top:6px;right:10px;border:0;background:none;font-size:16px;color:var(--second)}
   .btn{font-family:inherit;flex:1;border-radius:999px;min-height:42px;font-size:13.5px;font-weight:800;border:0;cursor:pointer}
-  .btn-p{background:var(--primary);color:#fff}.btn-q{background:#F1F5F9;color:var(--ink)}
+  .btn-p{background:var(--btn-bg);color:var(--btn-tx)}.btn-q{background:#F1F5F9;color:var(--ink)}
   /* bottom sheet */
   #sheet{position:absolute;left:0;right:0;bottom:0;z-index:18;background:#fff;border-radius:22px 22px 0 0;
     box-shadow:0 -10px 34px rgba(15,23,42,.22);display:flex;flex-direction:column;max-height:72%}
@@ -78,6 +78,7 @@
   .bigbtn{font-family:inherit;width:100%;border-radius:999px;min-height:52px;font-size:16px;font-weight:800;border:0;margin-top:12px;cursor:pointer}
   .ghost{background:#F1F5F9;color:var(--ink)}
   .statelist{display:flex;flex-direction:column;gap:2px;margin-top:10px}
+  #stq{margin:12px 0 4px}
   .statelist button{font-family:inherit;display:flex;justify-content:space-between;align-items:center;border:0;background:none;
     font-size:15px;font-weight:700;color:var(--ink);padding:12px 6px;border-bottom:1px solid var(--line);cursor:pointer}
   .statelist button small{color:var(--second);font-weight:600}
@@ -105,10 +106,31 @@
   #navBtns{display:flex;gap:8px;margin-top:10px}
   #muteBtn{background:rgba(255,255,255,.14);color:#fff}
   #endBtn{background:var(--error);color:#fff}
+  body.dark #endBtn{background:#B91C1C}
   #toast{position:absolute;bottom:120px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:13.5px;
     font-weight:600;border-radius:999px;padding:11px 20px;z-index:60;display:none;white-space:nowrap;box-shadow:0 10px 30px rgba(0,0,0,.35)}
   .me-pulse{position:absolute;border-radius:50%;background:rgba(37,99,235,.15);transform:translate(-50%,-50%);z-index:3}
   button:focus-visible,[tabindex]:focus-visible,input:focus-visible{outline:3px solid #4ADE80;outline-offset:2px}
+  /* dark theme: every light surface flips, accents hold */
+  body.dark{--ink:#F1F5F9;--second:#A7B4C6;--line:#26334D;--primary:#4ADE80;--btn-bg:#22C55E;--btn-tx:#052E16;--error:#FCA5A5}
+  body.dark #navb{background:#0F172A}
+  body.dark #stateChip{background:#0F172A;color:#fff;border:1px solid #26334D}
+  body.dark #toast{background:#F1F5F9;color:#0F172A}
+  body.dark .clu{background:#0F172A;color:#fff}
+  body.dark #avatar{background:#15803D}
+  body.dark #phone{background:#0B1220}
+  body.dark #q{background:#16213A;color:#F1F5F9}
+  body.dark #qclear{background:#24334F;color:#A7B4C6}
+  body.dark #sheet,body.dark #pop,body.dark #mini,body.dark #place,body.dark .card{background:#141D33}
+  body.dark .btn-q{background:#1E2A45;color:#F1F5F9;border-color:#26334D}
+  body.dark #ctl button{background:#16213A;color:#F1F5F9}
+  body.dark .bigbtn.ghost{background:#1E2A45;color:#F1F5F9}
+  body.dark #grab i,body.dark #pgrab i{background:#334155}
+  body.dark .mx{background:#24334F!important;color:#A7B4C6!important}
+  body.dark select{background:#16213A;color:#F1F5F9;border-color:#26334D}
+  body.dark .kv{border-color:#26334D}
+  body.dark .vrow{background:#16213A}
+  body.dark .pin.sel .d{outline-color:#F1F5F9}
   .pin:focus{outline:none}
   .pin:focus .d{outline:3px solid #4ADE80;outline-offset:2px}
   /* driving mode: nothing on screen except map + nav card */
@@ -118,6 +140,19 @@
   #mini .mx{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:50%;
     border:0;background:#F1F5F9;color:var(--second);font-size:13px}
   #phone.naving #mini{display:none!important}
+  #ctray{position:absolute;left:12px;right:12px;z-index:17;background:var(--ink);color:#fff;border-radius:14px;
+    padding:10px 12px;font-size:13px;font-weight:700;display:none;align-items:center;gap:8px;
+    box-shadow:0 10px 28px rgba(0,0,0,.35)}
+  #ctray.on{display:flex}
+  #ctray .mini{font-family:inherit;font-size:12px;font-weight:800;border:0;border-radius:999px;padding:8px 14px;cursor:pointer}
+  .mini{font-family:inherit;font-size:12.5px;font-weight:700;border:1.5px solid var(--line);background:#fff;color:var(--ink);
+    border-radius:999px;padding:7px 13px;cursor:pointer}
+  .mini.go{border-color:var(--primary);color:var(--primary)}
+  body.dark .mini{background:#1E2A45;color:#F1F5F9;border-color:#26334D}
+  body.dark .mini.go{border-color:#4ADE80;color:#4ADE80}
+  #ctray .go{background:#4ADE80;color:#052E16}
+  #ctray .clr{background:rgba(255,255,255,.14);color:#fff}
+  #phone.naving #ctray{display:none!important}
   /* Google-style bottom place card */
   #place{position:absolute;left:0;right:0;bottom:0;z-index:30;background:#fff;border-radius:22px 22px 0 0;
     box-shadow:0 -10px 34px rgba(15,23,42,.25);display:none;flex-direction:column;max-height:74%}
@@ -150,7 +185,7 @@
       <button id="qclear" onclick="clearQ()">✕</button>
     </div>
     <button id="stateChip" onclick="openStates()">Lagos ▾</button>
-    <button id="avatar">P</button>
+    <button id="avatar" aria-label="Open profile" onclick="openProfile()">P</button>
   </header>
 
   <div id="ctl">
@@ -161,6 +196,7 @@
 
   <div id="pop"></div>
   <div id="mini" onclick="if(S.sel)openDetails(S.sel)"></div>
+  <div id="ctray"></div>
   <div id="place"><div id="pgrab"><i></i></div><div id="pbody"></div></div>
 
   <div id="sheet">
@@ -186,19 +222,28 @@
 <script>
 /* ================= DATA (sample — verify before launch) ================= */
 let ST=TANKUP_STATIONS;
-const STATES=[...new Set(ST.map(s=>s.state))].sort();const FC={Petrol:"#B45309",CNG:"#075985",EV:"#5B21B6"};
+const STATES=[...new Set(ST.map(s=>s.state))].sort();
+const REV_SEED={"TotalEnergies — Lekki P1":[{t:"Fast pumps, accurate meter.",r:5},{t:"Queue at rush hour.",r:3}],
+ "Mobil — Admiralty":[{t:"Petrol ran low on Sunday.",r:2}]};
+let REV=null; // lazy: store() is declared further down
+function getREV(){if(!REV)REV=Object.assign({},REV_SEED,store("reviews")||{});return REV;}
+function saveREV(){store("reviews",REV);}const FC={Petrol:"#B45309",CNG:"#075985",EV:"#5B21B6"};
 const FT={Petrol:["#FEF3C7","#B45309"],CNG:["#E0F2FE","#075985"],EV:["#EDE9FE","#5B21B6"]};
 
 /* ================= STATE ================= */
 const store=(k,v)=>v===undefined?JSON.parse(localStorage.getItem("tankup."+k)||"null"):localStorage.setItem("tankup."+k,JSON.stringify(v));
-const S={state:"Lagos",lga:"All",pos:null,posLabel:"Lagos",sel:null,nav:null,q:"",fuel:"All",mode:"near",voice:true,
+const S={state:"Lagos",lga:"All",pos:null,posLabel:"Lagos",sel:null,nav:null,q:"",fuel:"All",mode:"near",voice:true,cmp:[],
+ theme:store("theme")||"light",units:store("units")||"km",driverName:store("driverName")||"Driver",
+ vehicles:store("vehicles")||[{n:"Work Van",t:"CNG",active:true},{n:"Personal",t:"Petrol",active:false}],
  saved:new Set(store("saved")||[])};
 const $=id=>document.getElementById(id);
 function toast(m){const t=$("toast");t.textContent=m;t.style.display="block";clearTimeout(t._x);t._x=setTimeout(()=>t.style.display="none",1800);}
 function havKm(a,b,c,d){const R=6371,r=x=>x*Math.PI/180;
  const h=Math.sin(r(c-a)/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(r(d-b)/2)**2;return 2*R*Math.asin(Math.sqrt(h));}
 function dist(s){if(!S.pos)return null;return havKm(S.pos.lat,S.pos.lng,s.lat,s.lng);}
-function dstr(s){const k=dist(s);return k==null?`${s.area}, ${s.state}`:`${k.toFixed(1)} km · ~${Math.max(1,Math.round(k/25*60))} min`;}
+function dstr(s){const k=dist(s);if(k==null)return `${s.area}, ${s.state}`;
+ const d=S.units==="mi"?(k*0.621).toFixed(1)+" mi":k.toFixed(1)+" km";
+ return `${d} · ~${Math.max(1,Math.round(k/25*60))} min`;}
 function price(s){return "₦"+s.pp.toLocaleString()+s.unit;}
 
 /* ================= MAP ENGINE (drag + pinch like Google Maps) ================= */
@@ -208,20 +253,23 @@ const V={cx:0,cy:0,z:1}; // centre in world units, scale
 const phone=$("phone"), mapEl=$("map"), world=$("world"), base=$("base"), pinsEl=$("pins");
 function vw(){return phone.clientWidth;} function vh(){return phone.clientHeight;}
 function drawBase(){
+  const D=S.theme==="dark";
+  const P=D?{land:"#0E1626",minor:"#1B2740",major:"#24334F",water:"#16324A",park:"#14301F",case:"#2A3A55",road:"#24334F"}
+           :{land:"#E9EFE6",minor:"#DDE5D8",major:"#ffffff",water:"#CFE3EF",park:"#D9EAD3",case:"#D9DEE6",road:"#ffffff"};
   const x0=0,x1=(14.7-2.6)*W,y0=0,y1=(13.9-4.2)*W;
-  let s=`<rect x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" fill="#E9EFE6"/>`;
-  for(let g=2.6;g<=14.7;g+=0.2)s+=`<line x1="${X(g)}" y1="${y0}" x2="${X(g)}" y2="${y1}" stroke="#DDE5D8" stroke-width="3"/>`;
-  for(let g=4.2;g<=13.9;g+=0.2)s+=`<line x1="${x0}" y1="${Y(g)}" x2="${x1}" y2="${Y(g)}" stroke="#DDE5D8" stroke-width="3"/>`;
-  for(let g=3;g<=14;g++)s+=`<line x1="${X(g)}" y1="${y0}" x2="${X(g)}" y2="${y1}" stroke="#ffffff" stroke-width="14"/>`;
-  for(let g=5;g<=13;g++)s+=`<line x1="${x0}" y1="${Y(g)}" x2="${x1}" y2="${Y(g)}" stroke="#ffffff" stroke-width="14"/>`;
+  let s=`<rect x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" fill="${P.land}"/>`;
+  for(let g=2.6;g<=14.7;g+=0.2)s+=`<line x1="${X(g)}" y1="${y0}" x2="${X(g)}" y2="${y1}" stroke="${P.minor}" stroke-width="3"/>`;
+  for(let g=4.2;g<=13.9;g+=0.2)s+=`<line x1="${x0}" y1="${Y(g)}" x2="${x1}" y2="${Y(g)}" stroke="${P.minor}" stroke-width="3"/>`;
+  for(let g=3;g<=14;g++)s+=`<line x1="${X(g)}" y1="${y0}" x2="${X(g)}" y2="${y1}" stroke="${P.major}" stroke-width="14"/>`;
+  for(let g=5;g<=13;g++)s+=`<line x1="${x0}" y1="${Y(g)}" x2="${x1}" y2="${Y(g)}" stroke="${P.major}" stroke-width="14"/>`;
   // Lagos fine streets (the street router below walks this exact grid)
   let f="";
   for(let g=3.30;g<=3.661;g+=0.02){f+=`M ${X(g)} ${Y(6.38)} L ${X(g)} ${Y(6.50)} `;}
   for(let g=6.38;g<=6.501;g+=0.02){f+=`M ${X(3.30)} ${Y(g)} L ${X(3.66)} ${Y(g)} `;}
-  s+=`<path d="${f}" stroke="#D9DEE6" stroke-width="7" fill="none"/><path d="${f}" stroke="#ffffff" stroke-width="4" fill="none"/>`;
-  s+=`<ellipse cx="${X(3.55)}" cy="${Y(6.44)}" rx="70" ry="34" fill="#CFE3EF"/>`; // Lagos lagoon
-  s+=`<path d="M ${X(4.5)} ${Y(8.6)} Q ${X(6)} ${Y(8.1)} ${X(7.5)} ${Y(7.6)}" stroke="#CFE3EF" stroke-width="22" fill="none"/>`; // river hint
-  s+=`<rect x="${X(3.3)}" y="${Y(6.6)}" width="90" height="60" rx="12" fill="#D9EAD3"/>`;
+  s+=`<path d="${f}" stroke="${P.case}" stroke-width="7" fill="none"/><path d="${f}" stroke="${P.road}" stroke-width="4" fill="none"/>`;
+  s+=`<ellipse cx="${X(3.55)}" cy="${Y(6.44)}" rx="70" ry="34" fill="${P.water}"/>`; // Lagos lagoon
+  s+=`<path d="M ${X(4.5)} ${Y(8.6)} Q ${X(6)} ${Y(8.1)} ${X(7.5)} ${Y(7.6)}" stroke="${P.water}" stroke-width="22" fill="none"/>`; // river hint
+  s+=`<rect x="${X(3.3)}" y="${Y(6.6)}" width="90" height="60" rx="12" fill="${P.park}"/>`;
   s+=`<path id="routePath" d="" stroke="#15803D" stroke-width="14" fill="none" stroke-linecap="round"/>`;
   world.innerHTML=s;
 }
@@ -337,14 +385,16 @@ function positionMini(){const m=$("mini");if(!m||m.style.display==="none")return
 const SNAPS=[110,0.42,0.7];let snap=1;
 function sheetH(){return snap===0?SNAPS[0]:Math.round(vh()*SNAPS[snap]);}
 function renderSheet(){
+  if(S.mode==="trips")return renderTrips();
   const near=S.mode==="near";
   const items=(near?[...pool()]:ST.filter(s=>S.saved.has(s.id)))
    .sort((a,b)=>(S.pos?havKm(S.pos.lat,S.pos.lng,a.lat,a.lng):0)-(S.pos?havKm(S.pos.lat,S.pos.lng,b.lat,b.lng):0));
   $("sheetTitle").innerHTML=`
    <div style="display:flex;gap:8px;margin-bottom:6px">
-    <button class="btn ${near?"btn-p":"btn-q"}" style="min-height:38px;font-size:13px" onclick="S.mode='near';renderSheet()">Nearby</button>
-    <button class="btn ${near?"btn-q":"btn-p"}" style="min-height:38px;font-size:13px" onclick="S.mode='saved';renderSheet()">♥ Saved (${S.saved.size})</button></div>
-   <div>${near?`Near ${S.posLabel}`:"Your saved stations"} <small>· ${items.length} · SAMPLE DATA</small></div>`;
+    <button class="btn ${S.mode==="near"?"btn-p":"btn-q"}" style="min-height:38px;font-size:13px;flex:1" onclick="S.mode='near';renderSheet()">Nearby</button>
+    <button class="btn ${S.mode==="trips"?"btn-p":"btn-q"}" style="min-height:38px;font-size:13px;flex:1" onclick="S.mode='trips';renderSheet()">Trips</button>
+    <button class="btn ${S.mode==="saved"?"btn-p":"btn-q"}" style="min-height:38px;font-size:13px;flex:1" onclick="S.mode='saved';renderSheet()">♥ Saved (${S.saved.size})</button></div>
+   ${S.mode==="trips"?"":`<div>${near?`Near ${S.posLabel}`:"Your saved stations"} <small>· ${items.length} · SAMPLE DATA</small></div>`}`;
   $("sheet").style.height=sheetH()+"px";
   $("list").innerHTML=items.length?items.map(s=>
    `<div class="row" onclick="focusStation(${s.id})">
@@ -353,11 +403,51 @@ function renderSheet(){
      <div class="pr">${price(s)}<small>${s.fuels.join(" · ")}</small></div></div>`).join("")
    :(near?`<div style="padding:22px;text-align:center;color:var(--second);font-size:14px">No stations here — try another state or fuel.</div>`
     :`<div style="padding:22px;text-align:center;color:var(--second);font-size:14px">Nothing saved yet — open a station and tap ♡ Save.</div>`);
-  positionMini();
+  positionMini();positionTray();
 }
 function focusStation(id){
   const s=ST.find(x=>x.id===id);V.cx=X(s.lng);V.cy=Y(s.lat);V.z=Math.max(V.z,2.4);
   openPop(id);renderSheet();
+}
+function renderTrips(){
+  $("sheetTitle").innerHTML=`
+   <div style="display:flex;gap:8px;margin-bottom:6px">
+    <button class="btn btn-q" style="min-height:38px;font-size:13px;flex:1" onclick="S.mode='near';renderSheet()">Nearby</button>
+    <button class="btn btn-p" style="min-height:38px;font-size:13px;flex:1" onclick="S.mode='trips';renderSheet()">Trips</button>
+    <button class="btn btn-q" style="min-height:38px;font-size:13px;flex:1" onclick="S.mode='saved';renderSheet()">♥ Saved (${S.saved.size})</button></div>
+   <div>Plan a route <small>· on-route stations</small></div>`;
+  $("sheet").style.height=sheetH()+"px";
+  const recents=store("trips")||[];
+  $("list").innerHTML=`
+   <div style="display:flex;gap:8px">
+    <div style="flex:1"><label class="lbl" style="font-size:11px;font-weight:800;color:var(--second)">FROM</label>
+     <select id="tFrom" style="font-family:inherit;width:100%;padding:10px;border-radius:10px;border:1.5px solid var(--line)">${STATES.map(t=>`<option ${t===S.state?"selected":""}>${t}</option>`).join("")}</select></div>
+    <div style="flex:1"><label class="lbl" style="font-size:11px;font-weight:800;color:var(--second)">TO</label>
+     <select id="tTo" style="font-family:inherit;width:100%;padding:10px;border-radius:10px;border:1.5px solid var(--line)">${STATES.map(t=>`<option ${t==="Oyo"?"selected":""}>${t}</option>`).join("")}</select></div></div>
+   <button class="btn btn-p" style="width:100%;margin:12px 0" onclick="planTrip()">Find stations on route</button>
+   <div id="tripRes"></div>
+   ${recents.length?`<div style="font-size:12px;font-weight:800;color:var(--second);margin:8px 0 2px">RECENT</div>`+recents.map((t,i)=>
+    `<div class="row" onclick="retrip(${i})"><div><div class="t">${t.from} → ${t.to}</div><div class="s">${t.n} stations · cheapest ${t.best}</div></div></div>`).join(""):""}`;
+  positionMini();positionTray();
+}
+function planTrip(){
+  const a=$("tFrom").value,b=$("tTo").value;
+  const pool=[...ST.filter(s=>(s.state===a||s.state===b)&&s.open)].sort((p,q)=>p.pp-q.pp).slice(0,6);
+  if(!pool.length){$("tripRes").innerHTML=`<div style="padding:14px;text-align:center;color:var(--second);font-size:14px">No open stations on ${a} → ${b} yet.</div>`;return;}
+  const best=pool[0];
+  const recents=store("trips")||[];
+  recents.unshift({from:a,to:b,n:pool.length,best:price(best)});store("trips",recents.slice(0,8));
+  $("tripRes").innerHTML=`<div style="font-size:12px;font-weight:800;color:var(--second);margin:2px 0 4px">CHEAPEST FIRST · ${a} → ${b}</div>`+
+   pool.map(s=>`<div class="row" onclick="focusStation(${s.id})">
+    <div class="rd" style="background:${FC[s.fuels[0]]}"></div>
+    <div><div class="t">${s.name}</div><div class="s">${s.state} · ${s.avail}</div></div>
+    <div class="pr">${price(s)}<small>${s.fuels.join(" · ")}</small></div></div>`).join("");
+  toast(pool.length+" on-route stations found");
+}
+function retrip(i){
+  const t=(store("trips")||[])[i];if(!t)return;
+  S.mode="trips";renderTrips();
+  $("tFrom").value=t.from;$("tTo").value=t.to;planTrip();
 }
 $("list").onclick=e=>{if(e.target.closest(".row")||e.target.closest("button"))return;
  if(snap!==0){snap=0;renderSheet();}};
@@ -413,8 +503,12 @@ function openDetails(id){
    <div class="kv"><span>Availability</span><b>${s.avail}</b></div>
    <div class="kv"><span>Hours</span><b>${s.hours}</b></div>
    <div class="kv"><span>Rating</span><b>${s.rate} ★ (${s.rc})</b></div>
+   <h3 style="font-size:16px;margin-top:14px">Reviews (${(getREV()[s.name]||[]).length})</h3>
+   ${((getREV()[s.name]||[]).length?getREV()[s.name].map(v=>`<div class="kv"><span>${v.t}</span><b style="color:var(--petrol, #B45309)">${v.r}★</b></div>`).join(""):`<div style="font-size:13px;color:var(--second)">No reviews yet — be the first.</div>`)}
    <div class="pact"><button class="btn btn-p" onclick="startNav(${s.id})">Directions</button>
     <button class="btn btn-q" onclick="toggleSave(${s.id})">${S.saved.has(id)?"♥ Saved":"♡ Save"}</button></div>
+   <button class="btn btn-q" style="width:100%;margin-top:8px" onclick="addReview(${s.id})">Write a review</button>
+   <button class="btn btn-q" style="width:100%;margin-top:8px" onclick="toggleCmp(${s.id})">${S.cmp.includes(id)?"✓ In comparison — tap to remove":"＋ Compare with others"}</button>
    <h3 style="font-size:16px;margin-top:14px">Compare in ${s.state}</h3>
    <table style="width:100%;border-collapse:collapse;font-size:13px">${rows.map(r=>
     `<tr><td style="padding:8px 0;border-top:1px solid var(--line)">${r.name.split("—")[0].trim()}</td>
@@ -436,10 +530,79 @@ function closeDetails(){$("place").classList.remove("on");$("sheet").style.displ
   g.addEventListener("pointermove",mv);g.addEventListener("pointerup",up);g.addEventListener("pointercancel",up);});})();
 function toggleSave(id){S.saved.has(id)?S.saved.delete(id):S.saved.add(id);
  store("saved",[...S.saved]);renderSheet();toast(S.saved.has(id)?"Saved ♥":"Removed");openDetails(id);}
+function addReview(id){
+  const s=ST.find(x=>x.id===id);if(!s)return;
+  const t=prompt("Your review of "+s.name+":");if(!t)return;
+  let r=+(prompt("Rating 1-5:")||"5");r=Math.min(5,Math.max(1,r||5));
+  (getREV()[s.name]=getREV()[s.name]||[]).unshift({t,r});s.rc++;saveREV();
+  toast("Review posted — thanks!");openDetails(id);
+}
+function toggleCmp(id){
+  if(S.cmp.includes(id))S.cmp=S.cmp.filter(c=>c!==id);
+  else{if(S.cmp.length>=3){toast("Comparison holds 3 max — remove one first");return;}S.cmp.push(id);toast("Added to comparison");}
+  renderTray();if($("place").classList.contains("on"))openDetails(id);
+}
+function renderTray(){
+  const t=$("ctray");
+  if(!S.cmp.length){t.classList.remove("on");return;}
+  t.innerHTML=`⚖️ ${S.cmp.length} to compare <button class="mini go" onclick="showCmp()">Compare</button> <button class="mini clr" onclick="S.cmp=[];renderTray()">Clear</button>`;
+  t.classList.add("on");positionTray();
+}
+function positionTray(){const t=$("ctray");if(!t.classList.contains("on"))return;
+ t.style.bottom=($("sheet").offsetHeight+10)+"px";}
+function showCmp(){
+  const rows=S.cmp.map(id=>ST.find(s=>s.id===id)).filter(Boolean);
+  if(!rows.length)return;
+  const best=Math.min(...rows.map(r=>r.pp));
+  $("veilCard").innerHTML=`<h3>Side by side</h3><p>Cheapest ★ · tap a row to open it</p>
+   ${rows.map(r=>`<div class="kv" onclick="closeVeil();focusStation(${r.id})" style="cursor:pointer">
+    <span>${r.name}<br><small>${r.fuels.join(" · ")} · ${r.avail}</small></span>
+    <b style="${r.pp===best?"color:var(--primary)":""}">${price(r)}${r.pp===best?" ★":""}</b></div>`).join("")}
+   <button class="bigbtn ghost" onclick="closeVeil()">Done</button>`;
+  $("veil").classList.add("on");
+}
 function speak(t){try{
  if(!S.voice||!("speechSynthesis" in window))return;
  speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.rate=1.05;speechSynthesis.speak(u);
 }catch(_){}}
+function applyTheme(){document.body.classList.toggle("dark",S.theme==="dark");drawBase();render();}
+function openProfile(){
+  const v=S.vehicles,act=v.find(x=>x.active)||v[0]||{n:"—",t:""};
+  $("veilCard").innerHTML=`
+   <div style="display:flex;gap:12px;align-items:center;margin:4px 0 6px">
+    <div style="width:52px;height:52px;border-radius:50%;background:var(--primary);color:#fff;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${(S.driverName||"D")[0].toUpperCase()}</div>
+    <div><div style="font-weight:800;font-size:17px">${S.driverName}</div>
+    <div style="font-size:12.5px;color:var(--second)">${act.t}${act.n?" · "+act.n:""} · synced</div></div></div>
+   <button class="bigbtn ghost" onclick="editName()">Edit name</button>
+   <div style="font-size:12px;font-weight:800;color:var(--second);margin:14px 0 2px">APPEARANCE</div>
+   <div style="display:flex;gap:8px">
+    <button class="btn ${S.theme==="light"?"btn-p":"btn-q"}" style="flex:1" onclick="setTheme('light')">☀️ Light</button>
+    <button class="btn ${S.theme==="dark"?"btn-p":"btn-q"}" style="flex:1" onclick="setTheme('dark')">🌙 Dark</button></div>
+   <div style="font-size:12px;font-weight:800;color:var(--second);margin:14px 0 2px">DISTANCE UNITS</div>
+   <div style="display:flex;gap:8px">
+    <button class="btn ${S.units==="km"?"btn-p":"btn-q"}" style="flex:1" onclick="setUnits('km')">Kilometres</button>
+    <button class="btn ${S.units==="mi"?"btn-p":"btn-q"}" style="flex:1" onclick="setUnits('mi')">Miles</button></div>
+   <div style="font-size:12px;font-weight:800;color:var(--second);margin:14px 0 2px">MY VEHICLES</div>
+   ${v.map((x,i)=>`<div class="kv"><span>🚐 ${x.n}<br><small style="color:var(--second)">${x.t}${x.active?" · active":""}</small></span>
+    <span><button class="mini ${x.active?"":"go"}" onclick="setActiveV(${i})">${x.active?"✓":"Use"}</button>
+    <button class="mini" onclick="delV(${i})">✕</button></span></div>`).join("")||`<div style="font-size:13px;color:var(--second)">No vehicles yet.</div>`}
+   <button class="bigbtn ghost" onclick="addV()">＋ Add vehicle</button>
+   <button class="bigbtn ghost" onclick="closeVeil()">Close</button>`;
+  $("veil").classList.add("on");
+}
+function refreshAvatar(){const a=$("avatar");if(a)a.textContent=(S.driverName||"D")[0].toUpperCase();}
+function editName(){const n=prompt("Display name:",S.driverName);if(n){S.driverName=n;store("driverName",n);refreshAvatar();openProfile();toast("Name updated");}}
+function setTheme(t){S.theme=t;store("theme",t);applyTheme();openProfile();}
+function setUnits(u){S.units=u;store("units",u);openProfile();renderSheet();toast(u==="km"?"Kilometres":"Miles");}
+function addV(){const n=prompt("Vehicle nickname (e.g. School Run):");if(!n)return;
+ let t=prompt("Energy type — Petrol, CNG or EV:")||"Petrol";t=t[0].toUpperCase()+t.slice(1).toLowerCase();
+ if(!["Petrol","CNG","EV"].includes(t)){toast("Use Petrol, CNG or EV");return;}
+ S.vehicles.push({n,t,active:false});store("vehicles",S.vehicles);openProfile();toast("Vehicle added");}
+function setActiveV(i){S.vehicles.forEach((x,j)=>x.active=i===j);store("vehicles",S.vehicles);
+ S.fuel=S.vehicles[i].t;openProfile();renderPins();renderSheet();toast(S.vehicles[i].n+" active — map refiltered to "+S.vehicles[i].t);}
+function delV(i){if(S.vehicles.length===1){toast("Keep at least one vehicle");return;}
+ const was=S.vehicles[i].active;S.vehicles.splice(i,1);if(was)S.vehicles[0].active=true;
+ store("vehicles",S.vehicles);openProfile();toast("Vehicle removed");}
 function toggleMute(){S.voice=!S.voice;try{speechSynthesis.cancel();}catch(_){}
  $("muteBtn").textContent=S.voice?"🔊 Voice on":"🔇 Muted";
  if(S.nav)startNav(S.nav,true);else toast(S.voice?"Voice guidance on":"Voice guidance muted");}
@@ -606,6 +769,7 @@ async function loadLive(){
     return res.data.map(dbRow);
   }catch(e){return false;}
 }
+applyTheme();refreshAvatar();
 drawBase();
 (async()=>{const live=await loadLive();
  if(live&&live.length){ST=live;toast("Live data connected ✓");}
