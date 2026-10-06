@@ -110,6 +110,21 @@
     font-weight:600;border-radius:999px;padding:11px 20px;z-index:60;display:none;white-space:nowrap;box-shadow:0 10px 30px rgba(0,0,0,.35)}
   .me-pulse{position:absolute;border-radius:50%;background:rgba(37,99,235,.15);transform:translate(-50%,-50%);z-index:3}
   button:focus-visible,[tabindex]:focus-visible,input:focus-visible{outline:3px solid #4ADE80;outline-offset:2px}
+  /* dark theme: every light surface flips, accents hold */
+  body.dark{--ink:#F1F5F9;--second:#A7B4C6;--line:#26334D;--primary:#4ADE80;--error:#FCA5A5}
+  body.dark #phone{background:#0B1220}
+  body.dark #q{background:#16213A;color:#F1F5F9}
+  body.dark #qclear{background:#24334F;color:#A7B4C6}
+  body.dark #sheet,body.dark #pop,body.dark #mini,body.dark #place,body.dark .card{background:#141D33}
+  body.dark .btn-q{background:#1E2A45;color:#F1F5F9;border-color:#26334D}
+  body.dark #ctl button{background:#16213A;color:#F1F5F9}
+  body.dark .bigbtn.ghost{background:#1E2A45;color:#F1F5F9}
+  body.dark #grab i,body.dark #pgrab i{background:#334155}
+  body.dark .mx{background:#24334F!important;color:#A7B4C6!important}
+  body.dark select{background:#16213A;color:#F1F5F9;border-color:#26334D}
+  body.dark .kv{border-color:#26334D}
+  body.dark .vrow{background:#16213A}
+  body.dark .pin.sel .d{outline-color:#F1F5F9}
   .pin:focus{outline:none}
   .pin:focus .d{outline:3px solid #4ADE80;outline-offset:2px}
   /* driving mode: nothing on screen except map + nav card */
@@ -124,6 +139,11 @@
     box-shadow:0 10px 28px rgba(0,0,0,.35)}
   #ctray.on{display:flex}
   #ctray .mini{font-family:inherit;font-size:12px;font-weight:800;border:0;border-radius:999px;padding:8px 14px;cursor:pointer}
+  .mini{font-family:inherit;font-size:12.5px;font-weight:700;border:1.5px solid var(--line);background:#fff;color:var(--ink);
+    border-radius:999px;padding:7px 13px;cursor:pointer}
+  .mini.go{border-color:var(--primary);color:var(--primary)}
+  body.dark .mini{background:#1E2A45;color:#F1F5F9;border-color:#26334D}
+  body.dark .mini.go{border-color:#4ADE80;color:#4ADE80}
   #ctray .go{background:#4ADE80;color:#052E16}
   #ctray .clr{background:rgba(255,255,255,.14);color:#fff}
   #phone.naving #ctray{display:none!important}
@@ -159,7 +179,7 @@
       <button id="qclear" onclick="clearQ()">✕</button>
     </div>
     <button id="stateChip" onclick="openStates()">Lagos ▾</button>
-    <button id="avatar">P</button>
+    <button id="avatar" aria-label="Open profile" onclick="openProfile()">P</button>
   </header>
 
   <div id="ctl">
@@ -207,13 +227,17 @@ const FT={Petrol:["#FEF3C7","#B45309"],CNG:["#E0F2FE","#075985"],EV:["#EDE9FE","
 /* ================= STATE ================= */
 const store=(k,v)=>v===undefined?JSON.parse(localStorage.getItem("tankup."+k)||"null"):localStorage.setItem("tankup."+k,JSON.stringify(v));
 const S={state:"Lagos",lga:"All",pos:null,posLabel:"Lagos",sel:null,nav:null,q:"",fuel:"All",mode:"near",voice:true,cmp:[],
+ theme:store("theme")||"light",units:store("units")||"km",driverName:store("driverName")||"Driver",
+ vehicles:store("vehicles")||[{n:"Work Van",t:"CNG",active:true},{n:"Personal",t:"Petrol",active:false}],
  saved:new Set(store("saved")||[])};
 const $=id=>document.getElementById(id);
 function toast(m){const t=$("toast");t.textContent=m;t.style.display="block";clearTimeout(t._x);t._x=setTimeout(()=>t.style.display="none",1800);}
 function havKm(a,b,c,d){const R=6371,r=x=>x*Math.PI/180;
  const h=Math.sin(r(c-a)/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(r(d-b)/2)**2;return 2*R*Math.asin(Math.sqrt(h));}
 function dist(s){if(!S.pos)return null;return havKm(S.pos.lat,S.pos.lng,s.lat,s.lng);}
-function dstr(s){const k=dist(s);return k==null?`${s.area}, ${s.state}`:`${k.toFixed(1)} km · ~${Math.max(1,Math.round(k/25*60))} min`;}
+function dstr(s){const k=dist(s);if(k==null)return `${s.area}, ${s.state}`;
+ const d=S.units==="mi"?(k*0.621).toFixed(1)+" mi":k.toFixed(1)+" km";
+ return `${d} · ~${Math.max(1,Math.round(k/25*60))} min`;}
 function price(s){return "₦"+s.pp.toLocaleString()+s.unit;}
 
 /* ================= MAP ENGINE (drag + pinch like Google Maps) ================= */
@@ -223,20 +247,23 @@ const V={cx:0,cy:0,z:1}; // centre in world units, scale
 const phone=$("phone"), mapEl=$("map"), world=$("world"), base=$("base"), pinsEl=$("pins");
 function vw(){return phone.clientWidth;} function vh(){return phone.clientHeight;}
 function drawBase(){
+  const D=S.theme==="dark";
+  const P=D?{land:"#0E1626",minor:"#1B2740",major:"#24334F",water:"#16324A",park:"#14301F",case:"#2A3A55",road:"#24334F"}
+           :{land:"#E9EFE6",minor:"#DDE5D8",major:"#ffffff",water:"#CFE3EF",park:"#D9EAD3",case:"#D9DEE6",road:"#ffffff"};
   const x0=0,x1=(14.7-2.6)*W,y0=0,y1=(13.9-4.2)*W;
-  let s=`<rect x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" fill="#E9EFE6"/>`;
-  for(let g=2.6;g<=14.7;g+=0.2)s+=`<line x1="${X(g)}" y1="${y0}" x2="${X(g)}" y2="${y1}" stroke="#DDE5D8" stroke-width="3"/>`;
-  for(let g=4.2;g<=13.9;g+=0.2)s+=`<line x1="${x0}" y1="${Y(g)}" x2="${x1}" y2="${Y(g)}" stroke="#DDE5D8" stroke-width="3"/>`;
-  for(let g=3;g<=14;g++)s+=`<line x1="${X(g)}" y1="${y0}" x2="${X(g)}" y2="${y1}" stroke="#ffffff" stroke-width="14"/>`;
-  for(let g=5;g<=13;g++)s+=`<line x1="${x0}" y1="${Y(g)}" x2="${x1}" y2="${Y(g)}" stroke="#ffffff" stroke-width="14"/>`;
+  let s=`<rect x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" fill="${P.land}"/>`;
+  for(let g=2.6;g<=14.7;g+=0.2)s+=`<line x1="${X(g)}" y1="${y0}" x2="${X(g)}" y2="${y1}" stroke="${P.minor}" stroke-width="3"/>`;
+  for(let g=4.2;g<=13.9;g+=0.2)s+=`<line x1="${x0}" y1="${Y(g)}" x2="${x1}" y2="${Y(g)}" stroke="${P.minor}" stroke-width="3"/>`;
+  for(let g=3;g<=14;g++)s+=`<line x1="${X(g)}" y1="${y0}" x2="${X(g)}" y2="${y1}" stroke="${P.major}" stroke-width="14"/>`;
+  for(let g=5;g<=13;g++)s+=`<line x1="${x0}" y1="${Y(g)}" x2="${x1}" y2="${Y(g)}" stroke="${P.major}" stroke-width="14"/>`;
   // Lagos fine streets (the street router below walks this exact grid)
   let f="";
   for(let g=3.30;g<=3.661;g+=0.02){f+=`M ${X(g)} ${Y(6.38)} L ${X(g)} ${Y(6.50)} `;}
   for(let g=6.38;g<=6.501;g+=0.02){f+=`M ${X(3.30)} ${Y(g)} L ${X(3.66)} ${Y(g)} `;}
-  s+=`<path d="${f}" stroke="#D9DEE6" stroke-width="7" fill="none"/><path d="${f}" stroke="#ffffff" stroke-width="4" fill="none"/>`;
-  s+=`<ellipse cx="${X(3.55)}" cy="${Y(6.44)}" rx="70" ry="34" fill="#CFE3EF"/>`; // Lagos lagoon
-  s+=`<path d="M ${X(4.5)} ${Y(8.6)} Q ${X(6)} ${Y(8.1)} ${X(7.5)} ${Y(7.6)}" stroke="#CFE3EF" stroke-width="22" fill="none"/>`; // river hint
-  s+=`<rect x="${X(3.3)}" y="${Y(6.6)}" width="90" height="60" rx="12" fill="#D9EAD3"/>`;
+  s+=`<path d="${f}" stroke="${P.case}" stroke-width="7" fill="none"/><path d="${f}" stroke="${P.road}" stroke-width="4" fill="none"/>`;
+  s+=`<ellipse cx="${X(3.55)}" cy="${Y(6.44)}" rx="70" ry="34" fill="${P.water}"/>`; // Lagos lagoon
+  s+=`<path d="M ${X(4.5)} ${Y(8.6)} Q ${X(6)} ${Y(8.1)} ${X(7.5)} ${Y(7.6)}" stroke="${P.water}" stroke-width="22" fill="none"/>`; // river hint
+  s+=`<rect x="${X(3.3)}" y="${Y(6.6)}" width="90" height="60" rx="12" fill="${P.park}"/>`;
   s+=`<path id="routePath" d="" stroke="#15803D" stroke-width="14" fill="none" stroke-linecap="round"/>`;
   world.innerHTML=s;
 }
@@ -532,6 +559,44 @@ function speak(t){try{
  if(!S.voice||!("speechSynthesis" in window))return;
  speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.rate=1.05;speechSynthesis.speak(u);
 }catch(_){}}
+function applyTheme(){document.body.classList.toggle("dark",S.theme==="dark");drawBase();render();}
+function openProfile(){
+  const v=S.vehicles,act=v.find(x=>x.active)||v[0]||{n:"—",t:""};
+  $("veilCard").innerHTML=`
+   <div style="display:flex;gap:12px;align-items:center;margin:4px 0 6px">
+    <div style="width:52px;height:52px;border-radius:50%;background:var(--primary);color:#fff;font-size:20px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${(S.driverName||"D")[0].toUpperCase()}</div>
+    <div><div style="font-weight:800;font-size:17px">${S.driverName}</div>
+    <div style="font-size:12.5px;color:var(--second)">${act.t}${act.n?" · "+act.n:""} · synced</div></div></div>
+   <button class="bigbtn ghost" onclick="editName()">Edit name</button>
+   <div style="font-size:12px;font-weight:800;color:var(--second);margin:14px 0 2px">APPEARANCE</div>
+   <div style="display:flex;gap:8px">
+    <button class="btn ${S.theme==="light"?"btn-p":"btn-q"}" style="flex:1" onclick="setTheme('light')">☀️ Light</button>
+    <button class="btn ${S.theme==="dark"?"btn-p":"btn-q"}" style="flex:1" onclick="setTheme('dark')">🌙 Dark</button></div>
+   <div style="font-size:12px;font-weight:800;color:var(--second);margin:14px 0 2px">DISTANCE UNITS</div>
+   <div style="display:flex;gap:8px">
+    <button class="btn ${S.units==="km"?"btn-p":"btn-q"}" style="flex:1" onclick="setUnits('km')">Kilometres</button>
+    <button class="btn ${S.units==="mi"?"btn-p":"btn-q"}" style="flex:1" onclick="setUnits('mi')">Miles</button></div>
+   <div style="font-size:12px;font-weight:800;color:var(--second);margin:14px 0 2px">MY VEHICLES</div>
+   ${v.map((x,i)=>`<div class="kv"><span>🚐 ${x.n}<br><small style="color:var(--second)">${x.t}${x.active?" · active":""}</small></span>
+    <span><button class="mini ${x.active?"":"go"}" onclick="setActiveV(${i})">${x.active?"✓":"Use"}</button>
+    <button class="mini" onclick="delV(${i})">✕</button></span></div>`).join("")||`<div style="font-size:13px;color:var(--second)">No vehicles yet.</div>`}
+   <button class="bigbtn ghost" onclick="addV()">＋ Add vehicle</button>
+   <button class="bigbtn ghost" onclick="closeVeil()">Close</button>`;
+  $("veil").classList.add("on");
+}
+function refreshAvatar(){const a=$("avatar");if(a)a.textContent=(S.driverName||"D")[0].toUpperCase();}
+function editName(){const n=prompt("Display name:",S.driverName);if(n){S.driverName=n;store("driverName",n);refreshAvatar();openProfile();toast("Name updated");}}
+function setTheme(t){S.theme=t;store("theme",t);applyTheme();openProfile();}
+function setUnits(u){S.units=u;store("units",u);openProfile();renderSheet();toast(u==="km"?"Kilometres":"Miles");}
+function addV(){const n=prompt("Vehicle nickname (e.g. School Run):");if(!n)return;
+ let t=prompt("Energy type — Petrol, CNG or EV:")||"Petrol";t=t[0].toUpperCase()+t.slice(1).toLowerCase();
+ if(!["Petrol","CNG","EV"].includes(t)){toast("Use Petrol, CNG or EV");return;}
+ S.vehicles.push({n,t,active:false});store("vehicles",S.vehicles);openProfile();toast("Vehicle added");}
+function setActiveV(i){S.vehicles.forEach((x,j)=>x.active=i===j);store("vehicles",S.vehicles);
+ S.fuel=S.vehicles[i].t;openProfile();renderPins();renderSheet();toast(S.vehicles[i].n+" active — map refiltered to "+S.vehicles[i].t);}
+function delV(i){if(S.vehicles.length===1){toast("Keep at least one vehicle");return;}
+ const was=S.vehicles[i].active;S.vehicles.splice(i,1);if(was)S.vehicles[0].active=true;
+ store("vehicles",S.vehicles);openProfile();toast("Vehicle removed");}
 function toggleMute(){S.voice=!S.voice;try{speechSynthesis.cancel();}catch(_){}
  $("muteBtn").textContent=S.voice?"🔊 Voice on":"🔇 Muted";
  if(S.nav)startNav(S.nav,true);else toast(S.voice?"Voice guidance on":"Voice guidance muted");}
@@ -698,6 +763,7 @@ async function loadLive(){
     return res.data.map(dbRow);
   }catch(e){return false;}
 }
+applyTheme();refreshAvatar();
 drawBase();
 (async()=>{const live=await loadLive();
  if(live&&live.length){ST=live;toast("Live data connected ✓");}
