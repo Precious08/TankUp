@@ -20,10 +20,6 @@
   #map:active{cursor:grabbing}
   #base{position:absolute;left:0;top:0;will-change:transform}
   #pins{position:absolute;left:0;top:0;width:0;height:0}
-  #clus{position:absolute;left:0;top:0;width:0;height:0;z-index:6}
-  .clu{position:absolute;transform:translate(-50%,-50%);min-width:38px;height:38px;border-radius:999px;
-    background:var(--ink);color:#fff;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;
-    padding:0 10px;border:3px solid #fff;box-shadow:0 0 0 1.5px rgba(15,23,42,.9),0 3px 10px rgba(0,0,0,.4)}
   .pin{position:absolute;transform:translate(-50%,-100%);z-index:5}
   .pin .d{width:28px;height:28px;border-radius:50% 50% 50% 4px;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 0 0 1px rgba(15,23,42,.55),0 2px 8px rgba(0,0,0,.4)}
   .pin.sel .d{outline:3px solid var(--ink);outline-offset:1px}
@@ -145,7 +141,6 @@
   <div id="map" role="application" tabindex="0" aria-label="Station map. Arrow keys pan, plus and minus zoom. Tab reaches station pins.">
     <svg id="base" width="0" height="0"><g id="world"></g></svg>
     <div id="pins"></div>
-    <div id="clus"></div>
     <div id="meDot" style="display:none"></div>
   </div>
 
@@ -247,32 +242,11 @@ function render(){
     pinsEl.onkeydown=e=>{const p=e.target.closest&&e.target.closest(".pin");
       if(p&&(e.key==="Enter"||e.key===" ")){e.preventDefault();openPop(+p.dataset.id);}};
   }
-  // cluster pins closer than one cell: bubble with count, tap to zoom in
-  const CELL=64,grid=new Map();
-  for(const s of items){
-    const sx=(X(s.lng)-V.cx)*V.z+w/2, sy=(Y(s.lat)-V.cy)*V.z+h/2;
-    s._sx=sx;s._sy=sy;
-    s._off=(sx<-40||sy<-60||sx>w+40||sy>h+60);
-    if(s._off)continue;
-    const k=Math.floor(sx/CELL)+":"+Math.floor(sy/CELL);
-    if(!grid.has(k))grid.set(k,[]);
-    grid.get(k).push(s);}
-  const clusEl=$("clus");let ch="";
+  // every pin shows, always — no clustering, no counts
   for(const s of items){const el=pinById.get(s.id);if(!el)continue;
-    el.style.display=s._off?"none":"block";el.style.left=s._sx+"px";el.style.top=s._sy+"px";}
-  for(const arr of grid.values()){
-    if(arr.length<2||V.z>=5)continue; // split apart when zoomed close
-    let cx=0,cy=0;for(const s of arr){cx+=s._sx;cy+=s._sy;
-      const el=pinById.get(s.id);if(el&&s.id!==S.sel)el.style.display="none";}
-    cx/=arr.length;cy/=arr.length;
-    ch+=`<div class="clu" role="button" tabindex="0" aria-label="${arr.length} stations, tap to zoom in" data-x="${cx}" data-y="${cy}">${arr.length}</div>`;}
-  clusEl.innerHTML=ch;
-  clusEl.querySelectorAll(".clu").forEach(c=>{
-    const x=+c.dataset.x,y=+c.dataset.y;
-    c.style.left=x+"px";c.style.top=y+"px";
-    const go=()=>zoomBy(1.9,x,y);
-    c.addEventListener("pointerup",e=>{e.stopPropagation();go();});
-    c.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go();}});});
+    const sx=(X(s.lng)-V.cx)*V.z+w/2, sy=(Y(s.lat)-V.cy)*V.z+h/2;
+    el.style.display=(sx<-40||sy<-60||sx>w+40||sy>h+60)?"none":"block";
+    el.style.left=sx+"px";el.style.top=sy+"px";}
   if(S.pos){const mx=(X(S.pos.lng)-V.cx)*V.z+w/2,my=(Y(S.pos.lat)-V.cy)*V.z+h/2;
     const me=$("meDot");me.style.display="block";me.style.left=mx+"px";me.style.top=my+"px";}
 }
@@ -299,7 +273,7 @@ function recenter(){if(!S.pos){fitState(S.state);toast("No GPS fix — showing "
 /* drag + pinch */
 const ptrs=new Map();let pinchD=0;
 let tapT=0,tapX=0,tapY=0;
-mapEl.addEventListener("pointerdown",e=>{if(e.target.closest(".pin")||e.target.closest(".clu"))return; // let taps through
+mapEl.addEventListener("pointerdown",e=>{if(e.target.closest(".pin"))return; // let pin taps through
  tapT=Date.now();tapX=e.clientX;tapY=e.clientY;
  mapEl.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
  if(ptrs.size===2){const p=[...ptrs.values()];pinchD=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);}});
