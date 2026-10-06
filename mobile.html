@@ -359,8 +359,8 @@ function renderSheet(){
   $("sheetTitle").innerHTML=`
    <div style="display:flex;gap:8px;margin-bottom:6px">
     <button class="btn ${S.mode==="near"?"btn-p":"btn-q"}" style="min-height:38px;font-size:13px;flex:1" onclick="S.mode='near';renderSheet()">Nearby</button>
-    <button class="btn ${S.mode==="saved"?"btn-p":"btn-q"}" style="min-height:38px;font-size:13px;flex:1" onclick="S.mode='saved';renderSheet()">♥ Saved (${S.saved.size})</button>
-    <button class="btn ${S.mode==="trips"?"btn-p":"btn-q"}" style="min-height:38px;font-size:13px;flex:1" onclick="S.mode='trips';renderSheet()">Trips</button></div>
+    <button class="btn ${S.mode==="trips"?"btn-p":"btn-q"}" style="min-height:38px;font-size:13px;flex:1" onclick="S.mode='trips';renderSheet()">Trips</button>
+    <button class="btn ${S.mode==="saved"?"btn-p":"btn-q"}" style="min-height:38px;font-size:13px;flex:1" onclick="S.mode='saved';renderSheet()">♥ Saved (${S.saved.size})</button></div>
    ${S.mode==="trips"?"":`<div>${near?`Near ${S.posLabel}`:"Your saved stations"} <small>· ${items.length} · SAMPLE DATA</small></div>`}`;
   $("sheet").style.height=sheetH()+"px";
   $("list").innerHTML=items.length?items.map(s=>
@@ -380,8 +380,8 @@ function renderTrips(){
   $("sheetTitle").innerHTML=`
    <div style="display:flex;gap:8px;margin-bottom:6px">
     <button class="btn btn-q" style="min-height:38px;font-size:13px;flex:1" onclick="S.mode='near';renderSheet()">Nearby</button>
-    <button class="btn btn-q" style="min-height:38px;font-size:13px;flex:1" onclick="S.mode='saved';renderSheet()">♥ Saved (${S.saved.size})</button>
-    <button class="btn btn-p" style="min-height:38px;font-size:13px;flex:1" onclick="S.mode='trips';renderSheet()">Trips</button></div>
+    <button class="btn btn-p" style="min-height:38px;font-size:13px;flex:1" onclick="S.mode='trips';renderSheet()">Trips</button>
+    <button class="btn btn-q" style="min-height:38px;font-size:13px;flex:1" onclick="S.mode='saved';renderSheet()">♥ Saved (${S.saved.size})</button></div>
    <div>Plan a route <small>· on-route stations</small></div>`;
   $("sheet").style.height=sheetH()+"px";
   const recents=store("trips")||[];
