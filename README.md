@@ -26,8 +26,7 @@ Answer: **"Where can I get the energy I need, how much will it cost, and how do 
 ```
 TankUp/
 ├── README.md
-├── demo.html            # full interactive web demo (Lagos showcase)
-├── mobile.html          # mobile-first demo: the lead product surface
+├── mobile.html          # mobile-first demo: the product surface
 ├── gallery.html         # design system gallery (open in browser)
 ├── data/stations.js     # generated station data (see scripts/)
 ├── .env.example         # copy to .env (never commit real keys)

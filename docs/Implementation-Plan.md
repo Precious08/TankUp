@@ -143,7 +143,7 @@ Exit: app launches cold to map tab <2s on mid-range Android; onboarding completa
 
 Goal: Open → Find → Compare → Choose.
 
-Surface strategy (decided): `mobile.html` is the lead device surface — new features land there first. `demo.html` is the desktop showcase and feature reference (compare tray, reviews, trips planner live there until ported).
+Surface strategy (decided): `mobile.html` is the single demo surface (retired `demo.html` to `docs/archive/` — it duplicated mobile and doubled maintenance).
 
 - Home map: user dot, station markers (3 types), re-center button, bottom sheet (nearby list + quick filters + saved/recent).
 - Search: station/area/street/destination; "Lekki" returns stations around Lekki.
