@@ -22,9 +22,15 @@ class HomeScreen extends ConsumerWidget {
         actions: [
           if (!backendOn)
             const Padding(
-              padding: EdgeInsets.only(right: 12),
+              padding: EdgeInsets.only(right: 4),
               child: Chip(label: Text('SAMPLE'), visualDensity: VisualDensity.compact),
             ),
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: _AvatarButton(
+              onTap: () => ref.read(tabIndexProvider.notifier).go(4),
+            ),
+          ),
         ],
       ),
       body: stations.when(
@@ -207,16 +213,6 @@ class _MapViewState extends ConsumerState<_MapView> {
           Fuel.cng => const Color(0xFF075985),
           Fuel.ev => const Color(0xFF5B21B6),
         };
-    final prefs = ref.watch(prefsProvider);
-    final avatarBytes = ref.watch(avatarBytesProvider);
-    Widget avatar() {
-      if (avatarBytes != null) {
-        return CircleAvatar(backgroundImage: MemoryImage(Uint8List.fromList(avatarBytes)));
-      }
-      final n = prefs.name.isEmpty ? 'D' : prefs.name[0].toUpperCase();
-      return CircleAvatar(child: Text(n));
-    }
-
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
@@ -283,14 +279,6 @@ class _MapViewState extends ConsumerState<_MapView> {
               ),
             ),
             Positioned(
-              top: 8,
-              right: 8,
-              child: GestureDetector(
-                onTap: () => ref.read(tabIndexProvider.notifier).go(4),
-                child: avatar(),
-              ),
-            ),
-            Positioned(
               right: 8,
               bottom: 8,
               child: Column(children: [
@@ -305,6 +293,22 @@ class _MapViewState extends ConsumerState<_MapView> {
         );
       }),
     );
+  }
+}
+
+class _AvatarButton extends ConsumerWidget {
+  final VoidCallback onTap;
+  const _AvatarButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final prefs = ref.watch(prefsProvider);
+    final bytes = ref.watch(avatarBytesProvider);
+    final avatar = bytes != null
+        ? CircleAvatar(backgroundImage: MemoryImage(Uint8List.fromList(bytes)))
+        : CircleAvatar(
+            child: Text(prefs.name.isEmpty ? 'D' : prefs.name[0].toUpperCase()));
+    return GestureDetector(onTap: onTap, child: avatar);
   }
 }
 

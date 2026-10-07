@@ -14,7 +14,7 @@ void main() {
     await tester.pumpWidget(const ProviderScope(child: TankUpApp()));
     await tester.pumpAndSettle();
 
-    for (final label in ['Home', 'Search', 'Saved', 'Trips', 'Profile']) {
+    for (final label in ['Home', 'Search', 'Saved', 'Trips', 'Settings']) {
       expect(find.text(label), findsWidgets);
     }
     expect(find.textContaining('TotalEnergies'), findsOneWidget);
