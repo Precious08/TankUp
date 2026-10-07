@@ -1,5 +1,4 @@
-// Home: map placeholder + filters + nearby list (PRD §6-§8).
-// Native Mapbox tiles land in Phase 6; pins already plot from real lng/lat.
+// Home: pannable/zoomable map, tappable pins, filters, nearby list (PRD §6-§8).
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/app_state.dart';
@@ -14,6 +13,7 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final stations = ref.watch(stationsProvider);
     final f = ref.watch(filtersProvider);
+    final cmp = ref.watch(compareProvider);
     return Scaffold(
       appBar: AppBar(
         title: const Text('TankUp'),
@@ -71,7 +71,33 @@ class HomeScreen extends ConsumerWidget {
                   ],
                 ),
               ),
-              SizedBox(height: 170, child: _MapPreview(stations: items)),
+              SizedBox(height: 220, child: _MapView(stations: items)),
+              if (cmp.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 6, 12, 0),
+                  child: Card(
+                    color: Theme.of(context).colorScheme.inverseSurface,
+                    child: ListTile(
+                      dense: true,
+                      title: Text('⚖️ ${cmp.length} to compare',
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.onInverseSurface)),
+                      trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                        TextButton(
+                          onPressed: () => showModalBottomSheet(
+                            context: context,
+                            builder: (_) => CompareSheet(ids: cmp.toList()),
+                          ),
+                          child: const Text('Compare'),
+                        ),
+                        TextButton(
+                          onPressed: () => ref.read(compareProvider.notifier).clear(),
+                          child: const Text('Clear'),
+                        ),
+                      ]),
+                    ),
+                  ),
+                ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
                 child: Align(
@@ -96,10 +122,10 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-/// Stylised live map preview: real lng/lat geometry, Mapbox tiles in Phase 6.
-class _MapPreview extends StatelessWidget {
+/// Pan/zoom map with tappable pins (native Mapbox tiles land in Phase 6).
+class _MapView extends StatelessWidget {
   final List<Station> stations;
-  const _MapPreview({required this.stations});
+  const _MapView({required this.stations});
 
   @override
   Widget build(BuildContext context) {
@@ -126,22 +152,39 @@ class _MapPreview extends StatelessWidget {
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
       ),
-      child: CustomPaint(
-        painter: _GridPainter(),
-        child: LayoutBuilder(builder: (_, box) {
-          return Stack(
-            children: [
-              for (final s in stations)
-                Positioned(
-                  left: (s.lng - x0) / dx * (box.maxWidth - 24),
-                  top: (1 - (s.lat - y0) / dy) * (box.maxHeight - 24),
-                  child: Icon(Icons.location_on,
-                      color: s.open ? pin(s) : Colors.grey, size: 26),
+      clipBehavior: Clip.antiAlias,
+      child: LayoutBuilder(builder: (context, box) {
+        return InteractiveViewer(
+          boundaryMargin: const EdgeInsets.all(80),
+          minScale: 0.6,
+          maxScale: 5,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {}, // empty-map taps land here; sheets dismiss via scrim
+            child: SizedBox(
+              width: box.maxWidth,
+              height: box.maxHeight,
+              child: CustomPaint(
+                painter: _GridPainter(),
+                child: Stack(
+                  children: [
+                    for (final s in stations)
+                      Positioned(
+                        left: (s.lng - x0) / dx * (box.maxWidth - 24),
+                        top: (1 - (s.lat - y0) / dy) * (box.maxHeight - 24),
+                        child: GestureDetector(
+                          onTap: () => showStationSheet(context, s),
+                          child: Icon(Icons.location_on,
+                              color: s.open ? pin(s) : Colors.grey, size: 28),
+                        ),
+                      ),
+                  ],
                 ),
-            ],
-          );
-        }),
-      ),
+              ),
+            ),
+          ),
+        );
+      }),
     );
   }
 }
@@ -160,6 +203,14 @@ class _GridPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+void showStationSheet(BuildContext context, Station s) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    builder: (_) => StationSheet(station: s),
+  );
 }
 
 class StationTile extends ConsumerWidget {
@@ -181,9 +232,7 @@ class StationTile extends ConsumerWidget {
           onPressed: () => ref.read(savedProvider.notifier).toggle(s.id),
         ),
       ]),
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => StationDetails(station: s)),
-      ),
+      onTap: () => showStationSheet(context, s),
     );
   }
 }

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/app_state.dart';
 import 'core/stations_repo.dart';
+import 'core/store.dart';
 import 'design/theme.dart';
 import 'features/home/home_screen.dart';
 import 'features/profile/profile_screen.dart';
@@ -14,6 +15,7 @@ import 'features/trips/trips_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initStore();
   if (backendOn) {
     try {
       await Supabase.initialize(url: sbUrl, publishableKey: sbKey);
