@@ -17,6 +17,14 @@ class Filters extends Notifier<({Fuel? fuel, bool openOnly, String query, String
 
 final filtersProvider = NotifierProvider<Filters, ({Fuel? fuel, bool openOnly, String query, String state})>(Filters.new);
 
+class TabIndex extends Notifier<int> {
+  @override
+  int build() => 0;
+  void go(int i) => state = i;
+}
+
+final tabIndexProvider = NotifierProvider<TabIndex, int>(TabIndex.new);
+
 class Saved extends Notifier<Set<String>> {
   @override
   Set<String> build() => store.getStringList('saved').toSet();
@@ -130,35 +138,50 @@ class Vehicles extends Notifier<List<Vehicle>> {
 
 final vehiclesProvider = NotifierProvider<Vehicles, List<Vehicle>>(Vehicles.new);
 
-class Prefs extends Notifier<({String name, bool dark, bool miles, bool voice})> {
+class Prefs extends Notifier<({String name, bool dark, bool miles, bool voice, String avatarPath})> {
   @override
-  ({String name, bool dark, bool miles, bool voice}) build() => (
+  ({String name, bool dark, bool miles, bool voice, String avatarPath}) build() => (
         name: store.getString('name') ?? 'Driver',
         dark: store.getBool('dark'),
         miles: store.getBool('miles'),
         voice: store.getBool('voice', fallback: true),
+        avatarPath: store.getString('avatarPath') ?? '',
       );
 
   void setName(String v) {
-    state = (name: v, dark: state.dark, miles: state.miles, voice: state.voice);
+    state = (name: v, dark: state.dark, miles: state.miles, voice: state.voice, avatarPath: state.avatarPath);
     store.setString('name', v);
   }
 
   void setDark(bool v) {
-    state = (name: state.name, dark: v, miles: state.miles, voice: state.voice);
+    state = (name: state.name, dark: v, miles: state.miles, voice: state.voice, avatarPath: state.avatarPath);
     store.setBool('dark', v);
   }
 
   void setMiles(bool v) {
-    state = (name: state.name, dark: state.dark, miles: v, voice: state.voice);
+    state = (name: state.name, dark: state.dark, miles: v, voice: state.voice, avatarPath: state.avatarPath);
     store.setBool('miles', v);
   }
 
   void setVoice(bool v) {
-    state = (name: state.name, dark: state.dark, miles: state.miles, voice: v);
+    state = (name: state.name, dark: state.dark, miles: state.miles, voice: v, avatarPath: state.avatarPath);
     store.setBool('voice', v);
+  }
+
+  void setAvatarPath(String v) {
+    state = (name: state.name, dark: state.dark, miles: state.miles, voice: state.voice, avatarPath: v);
+    store.setString('avatarPath', v);
   }
 }
 
-final prefsProvider =
-    NotifierProvider<Prefs, ({String name, bool dark, bool miles, bool voice})>(Prefs.new);
+final prefsProvider = NotifierProvider<Prefs,
+    ({String name, bool dark, bool miles, bool voice, String avatarPath})>(Prefs.new);
+
+/// In-memory custom avatar bytes (gallery pick). Path persists; bytes refresh per launch.
+class AvatarBytes extends Notifier<List<int>?> {
+  @override
+  List<int>? build() => null;
+  void set(List<int>? b) => state = b;
+}
+
+final avatarBytesProvider = NotifierProvider<AvatarBytes, List<int>?>(AvatarBytes.new);

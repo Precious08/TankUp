@@ -43,14 +43,13 @@ class TankUpApp extends ConsumerWidget {
   }
 }
 
-class TabsShell extends StatefulWidget {
+class TabsShell extends ConsumerStatefulWidget {
   const TabsShell({super.key});
   @override
-  State<TabsShell> createState() => _TabsShellState();
+  ConsumerState<TabsShell> createState() => _TabsShellState();
 }
 
-class _TabsShellState extends State<TabsShell> {
-  int _i = 0;
+class _TabsShellState extends ConsumerState<TabsShell> {
   static const _tabs = [
     HomeScreen(),
     SearchScreen(),
@@ -61,11 +60,12 @@ class _TabsShellState extends State<TabsShell> {
 
   @override
   Widget build(BuildContext context) {
+    final i = ref.watch(tabIndexProvider);
     return Scaffold(
-      body: IndexedStack(index: _i, children: _tabs),
+      body: IndexedStack(index: i, children: _tabs),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _i,
-        onDestinationSelected: (v) => setState(() => _i = v),
+        selectedIndex: i,
+        onDestinationSelected: (v) => ref.read(tabIndexProvider.notifier).go(v),
         destinations: const [
           NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
           NavigationDestination(icon: Icon(Icons.search_outlined), selectedIcon: Icon(Icons.search), label: 'Search'),

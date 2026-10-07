@@ -52,8 +52,11 @@ class StationSheet extends ConsumerWidget {
           Row(children: [
             Expanded(
               child: FilledButton(
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => NavScreen(station: s))),
+                onPressed: () => showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  builder: (_) => NavCard(station: s),
+                ),
                 child: const Text('Directions'),
               ),
             ),

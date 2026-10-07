@@ -1,6 +1,8 @@
 // Home: pannable/zoomable map, tappable pins, filters, nearby list (PRD §6-§8).
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../core/app_state.dart';
 import '../../core/models.dart';
 import '../../core/stations_repo.dart';
@@ -122,22 +124,81 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-/// Pan/zoom map with tappable pins (native Mapbox tiles land in Phase 6).
-class _MapView extends StatelessWidget {
+/// Pan/zoom map with tappable pins, Google-style controls, avatar shortcut.
+/// Native Mapbox tiles land in Phase 6; geometry is already real lng/lat.
+class _MapView extends ConsumerStatefulWidget {
   final List<Station> stations;
   const _MapView({required this.stations});
 
   @override
-  Widget build(BuildContext context) {
-    if (stations.isEmpty) {
-      return const Center(child: Text('No stations in view'));
+  ConsumerState<_MapView> createState() => _MapViewState();
+}
+
+class _MapViewState extends ConsumerState<_MapView> {
+  final TransformationController _controller = TransformationController();
+  ({double lat, double lng})? _me;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _zoom(double f) {
+    final size = context.size;
+    final c = size == null ? Offset.zero : Offset(size.width / 2, size.height / 2);
+    final cur = _controller.value;
+    final s1 = (cur.getMaxScaleOnAxis() * f).clamp(0.6, 5.0);
+    final t = cur.getTranslation();
+    // keep the viewport centre fixed while rescaling around it
+    final k = s1 / cur.getMaxScaleOnAxis();
+    _controller.value = Matrix4.diagonal3Values(s1, s1, 1)
+      ..setTranslationRaw(c.dx - (c.dx - t.x) * k, c.dy - (c.dy - t.y) * k, 0);
+  }
+
+  Future<void> _locate() async {
+    try {
+      var perm = await Geolocator.checkPermission();
+      if (perm == LocationPermission.denied) {
+        perm = await Geolocator.requestPermission();
+      }
+      if (perm == LocationPermission.denied || perm == LocationPermission.deniedForever) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Location permission denied')));
+        }
+        return;
+      }
+      final pos = await Geolocator.getCurrentPosition();
+      if (!mounted) return;
+      setState(() => _me = (lat: pos.latitude, lng: pos.longitude));
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Centered on you')));
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Location unavailable right now')));
+      }
     }
-    var x0 = stations.first.lng, x1 = x0, y0 = stations.first.lat, y1 = y0;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final stations = [...widget.stations];
+    var x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+    void eat(double lng, double lat) {
+      if (lng < x0) x0 = lng;
+      if (lng > x1) x1 = lng;
+      if (lat < y0) y0 = lat;
+      if (lat > y1) y1 = lat;
+    }
+
     for (final s in stations) {
-      if (s.lng < x0) x0 = s.lng;
-      if (s.lng > x1) x1 = s.lng;
-      if (s.lat < y0) y0 = s.lat;
-      if (s.lat > y1) y1 = s.lat;
+      eat(s.lng, s.lat);
+    }
+    if (_me != null) eat(_me!.lng, _me!.lat);
+    if (stations.isEmpty && _me == null) {
+      return const Center(child: Text('No stations in view'));
     }
     final dx = (x1 - x0) < 0.01 ? 0.01 : (x1 - x0);
     final dy = (y1 - y0) < 0.01 ? 0.01 : (y1 - y0);
@@ -146,6 +207,16 @@ class _MapView extends StatelessWidget {
           Fuel.cng => const Color(0xFF075985),
           Fuel.ev => const Color(0xFF5B21B6),
         };
+    final prefs = ref.watch(prefsProvider);
+    final avatarBytes = ref.watch(avatarBytesProvider);
+    Widget avatar() {
+      if (avatarBytes != null) {
+        return CircleAvatar(backgroundImage: MemoryImage(Uint8List.fromList(avatarBytes)));
+      }
+      final n = prefs.name.isEmpty ? 'D' : prefs.name[0].toUpperCase();
+      return CircleAvatar(child: Text(n));
+    }
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
@@ -154,37 +225,104 @@ class _MapView extends StatelessWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: LayoutBuilder(builder: (context, box) {
-        return InteractiveViewer(
-          boundaryMargin: const EdgeInsets.all(80),
-          minScale: 0.6,
-          maxScale: 5,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () {}, // empty-map taps land here; sheets dismiss via scrim
-            child: SizedBox(
-              width: box.maxWidth,
-              height: box.maxHeight,
-              child: CustomPaint(
-                painter: _GridPainter(),
-                child: Stack(
-                  children: [
-                    for (final s in stations)
-                      Positioned(
-                        left: (s.lng - x0) / dx * (box.maxWidth - 24),
-                        top: (1 - (s.lat - y0) / dy) * (box.maxHeight - 24),
-                        child: GestureDetector(
-                          onTap: () => showStationSheet(context, s),
-                          child: Icon(Icons.location_on,
-                              color: s.open ? pin(s) : Colors.grey, size: 28),
-                        ),
-                      ),
-                  ],
+        Offset px(double lng, double lat) => Offset(
+              (lng - x0) / dx * (box.maxWidth - 24),
+              (1 - (lat - y0) / dy) * (box.maxHeight - 24),
+            );
+        return Stack(
+          children: [
+            InteractiveViewer(
+              transformationController: _controller,
+              boundaryMargin: const EdgeInsets.all(80),
+              minScale: 0.6,
+              maxScale: 5,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {},
+                child: SizedBox(
+                  width: box.maxWidth,
+                  height: box.maxHeight,
+                  child: CustomPaint(
+                    painter: _GridPainter(),
+                    child: Stack(
+                      children: [
+                        for (final s in stations)
+                          Builder(builder: (_) {
+                            final p = px(s.lng, s.lat);
+                            return Positioned(
+                              left: p.dx,
+                              top: p.dy,
+                              child: GestureDetector(
+                                onTap: () => showStationSheet(context, s),
+                                child: Icon(Icons.location_on,
+                                    color: s.open ? pin(s) : Colors.grey, size: 28),
+                              ),
+                            );
+                          }),
+                        if (_me != null)
+                          Builder(builder: (_) {
+                            final p = px(_me!.lng, _me!.lat);
+                            return Positioned(
+                              left: p.dx - 9,
+                              top: p.dy - 9,
+                              child: Container(
+                                width: 18,
+                                height: 18,
+                                decoration: BoxDecoration(
+                                  color: Colors.blue,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.white, width: 4),
+                                ),
+                              ),
+                            );
+                          }),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: GestureDetector(
+                onTap: () => ref.read(tabIndexProvider.notifier).go(4),
+                child: avatar(),
+              ),
+            ),
+            Positioned(
+              right: 8,
+              bottom: 8,
+              child: Column(children: [
+                _MapBtn(icon: Icons.add, onTap: () => _zoom(1.4)),
+                const SizedBox(height: 8),
+                _MapBtn(icon: Icons.remove, onTap: () => _zoom(1 / 1.4)),
+                const SizedBox(height: 8),
+                _MapBtn(icon: Icons.my_location, onTap: _locate),
+              ]),
+            ),
+          ],
         );
       }),
+    );
+  }
+}
+
+class _MapBtn extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  const _MapBtn({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      shape: const CircleBorder(),
+      elevation: 3,
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: Padding(padding: const EdgeInsets.all(10), child: Icon(icon, size: 20)),
+      ),
     );
   }
 }
