@@ -42,27 +42,33 @@ class ProfileScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Center(
-            child: Column(children: [
-              GestureDetector(
-                onTap: () => _pickAvatar(ref, context),
-                child: bytes != null
-                    ? CircleAvatar(
-                        radius: 44,
-                        backgroundImage: MemoryImage(Uint8List.fromList(bytes)))
-                    : CircleAvatar(
-                        radius: 44,
-                        child: Text(
-                          prefs.name.isEmpty ? 'D' : prefs.name[0].toUpperCase(),
-                          style: const TextStyle(fontSize: 28),
-                        ),
-                      ),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Column(
+                children: [
+                  GestureDetector(
+                    onTap: () => _pickAvatar(ref, context),
+                    child: bytes != null
+                        ? CircleAvatar(
+                            radius: 44,
+                            backgroundImage:
+                                MemoryImage(Uint8List.fromList(bytes)))
+                        : CircleAvatar(
+                            radius: 44,
+                            child: Text(
+                              prefs.name.isEmpty ? 'D' : prefs.name[0].toUpperCase(),
+                              style: const TextStyle(fontSize: 28),
+                            ),
+                          ),
+                  ),
+                  TextButton(
+                    onPressed: () => _pickAvatar(ref, context),
+                    child: const Text('Change photo'),
+                  ),
+                ],
               ),
-              TextButton(
-                onPressed: () => _pickAvatar(ref, context),
-                child: const Text('Change photo'),
-              ),
-            ]),
+            ),
           ),
           Center(
             child: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -98,30 +104,36 @@ class ProfileScreen extends ConsumerWidget {
             textAlign: TextAlign.center,
             style: const TextStyle(color: Colors.grey),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Text('My vehicles', style: Theme.of(context).textTheme.titleMedium),
-          for (var i = 0; i < vehicles.length; i++)
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.directions_car),
-              title: Text(vehicles[i].nickname),
-              subtitle: Text(
-                  '${fuelName(vehicles[i].energy)}${vehicles[i].active ? ' · active' : ''}'),
-              trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-                if (!vehicles[i].active)
-                  TextButton(
-                    onPressed: () {
-                      ref.read(vehiclesProvider.notifier).activate(i);
-                      ref.read(filtersProvider.notifier).setFuel(vehicles[i].energy);
-                    },
-                    child: const Text('Use'),
+          const SizedBox(height: 8),
+          Card(
+            child: Column(
+              children: [
+                for (var i = 0; i < vehicles.length; i++)
+                  ListTile(
+                    leading: const Icon(Icons.directions_car),
+                    title: Text(vehicles[i].nickname),
+                    subtitle: Text(
+                        '${fuelName(vehicles[i].energy)}${vehicles[i].active ? ' · active' : ''}'),
+                    trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                      if (!vehicles[i].active)
+                        TextButton(
+                          onPressed: () {
+                            ref.read(vehiclesProvider.notifier).activate(i);
+                            ref.read(filtersProvider.notifier).setFuel(vehicles[i].energy);
+                          },
+                          child: const Text('Use'),
+                        ),
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline),
+                        onPressed: () => ref.read(vehiclesProvider.notifier).remove(i),
+                      ),
+                    ]),
                   ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: () => ref.read(vehiclesProvider.notifier).remove(i),
-                ),
-              ]),
+              ],
             ),
+          ),
           OutlinedButton.icon(
             icon: const Icon(Icons.add),
             label: const Text('Add vehicle'),

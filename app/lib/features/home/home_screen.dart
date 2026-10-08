@@ -241,7 +241,10 @@ class _MapViewState extends ConsumerState<_MapView> {
                   width: box.maxWidth,
                   height: box.maxHeight,
                   child: CustomPaint(
-                    painter: _GridPainter(),
+                    painter: _GridPainter(
+                        Theme.of(context).brightness == Brightness.dark
+                            ? const Color(0xFF26334D)
+                            : const Color(0xFFDDE5D8)),
                     child: Stack(
                       children: [
                         for (final s in stations)
@@ -334,9 +337,11 @@ class _MapBtn extends StatelessWidget {
 }
 
 class _GridPainter extends CustomPainter {
+  final Color color;
+  _GridPainter(this.color);
   @override
   void paint(Canvas canvas, Size size) {
-    final p = Paint()..color = const Color(0xFFDDE5D8)..strokeWidth = 1;
+    final p = Paint()..color = color..strokeWidth = 1;
     for (var x = 0.0; x < size.width; x += 28) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), p);
     }
@@ -365,18 +370,46 @@ class StationTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final s = station;
     final saved = ref.watch(savedProvider).contains(s.id);
-    return ListTile(
-      leading: Icon(Icons.location_on, color: s.open ? null : Colors.grey),
-      title: Text(s.name),
-      subtitle: Text('${s.area}, ${s.state} · ${s.open ? "Open" : "Closed"} · ${s.availability}'),
-      trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-        Text(s.priceLabel, style: const TextStyle(fontWeight: FontWeight.bold)),
-        IconButton(
-          icon: Icon(saved ? Icons.favorite : Icons.favorite_outline),
-          onPressed: () => ref.read(savedProvider.notifier).toggle(s.id),
+    final scheme = Theme.of(context).colorScheme;
+    return Card(
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        leading: Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            color: s.open ? scheme.primaryContainer : scheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(13),
+          ),
+          child: Icon(Icons.location_on,
+              color: s.open ? scheme.onPrimaryContainer : Colors.grey),
         ),
-      ]),
-      onTap: () => showStationSheet(context, s),
+        title: Text(s.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 3),
+          child: Text(
+              '${s.area}, ${s.state} · ${s.open ? "Open" : "Closed"} · ${s.availability}'),
+        ),
+        trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: scheme.primaryContainer,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(s.priceLabel,
+                style: TextStyle(
+                    fontWeight: FontWeight.bold, color: scheme.onPrimaryContainer)),
+          ),
+          IconButton(
+            icon: Icon(saved ? Icons.favorite : Icons.favorite_outline),
+            onPressed: () => ref.read(savedProvider.notifier).toggle(s.id),
+          ),
+        ]),
+        onTap: () => showStationSheet(context, s),
+      ),
     );
   }
 }

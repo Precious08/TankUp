@@ -116,7 +116,7 @@ class StationSheet extends ConsumerWidget {
   }
 
   Widget _kv(String k, String v) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(vertical: 7),
         child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
           Text(k, style: const TextStyle(color: Colors.grey)),
           Flexible(child: Text(v, textAlign: TextAlign.right)),

@@ -20,8 +20,20 @@ class SavedScreen extends ConsumerWidget {
         data: (all) {
           final items = all.where((s) => saved.contains(s.id)).toList();
           if (items.isEmpty) {
-            return const Center(
-                child: Text('Nothing saved yet — open a station and tap ♡ Save.'));
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(mainAxisSize: MainAxisSize.min, children: const [
+                  Icon(Icons.favorite_outline, size: 48, color: Colors.grey),
+                  SizedBox(height: 12),
+                  Text('Nothing saved yet',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  SizedBox(height: 4),
+                  Text('Open a station and tap ♡ Save.',
+                      style: TextStyle(color: Colors.grey), textAlign: TextAlign.center),
+                ]),
+              ),
+            );
           }
           return ListView.builder(
             itemCount: items.length,
