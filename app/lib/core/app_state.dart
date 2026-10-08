@@ -1,6 +1,7 @@
 // App-wide UI state (Riverpod Notifiers).
 // Persisted locally via store.dart; server sync lands in Phase 8.
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'models.dart';
 import 'store.dart' as store;
 
@@ -57,6 +58,46 @@ class Compare extends Notifier<Set<String>> {
 }
 
 final compareProvider = NotifierProvider<Compare, Set<String>>(Compare.new);
+
+/// Community reports outbox: sends to Supabase when online, queues locally.
+/// Moderation UI lands in Phase 9; nothing here is shown publicly.
+class Reports extends Notifier<List<Map<String, dynamic>>> {
+  @override
+  List<Map<String, dynamic>> build() => [];
+
+  Future<bool> submit({
+    required String kind,
+    required Map<String, dynamic> payload,
+    required String note,
+    SupabaseClient? client,
+  }) async {
+    final row = <String, dynamic>{
+      'kind': kind,
+      'payload': payload,
+      'note': note,
+    };
+    if (client != null) {
+      try {
+        await client.from('station_reports').insert(row);
+        await flush(client);
+        return true;
+      } catch (_) {}
+    }
+    state = [...state, row];
+    return false;
+  }
+
+  Future<void> flush(SupabaseClient client) async {
+    if (state.isEmpty) return;
+    try {
+      await client.from('station_reports').insert(state);
+      state = [];
+    } catch (_) {}
+  }
+}
+
+final reportsProvider =
+    NotifierProvider<Reports, List<Map<String, dynamic>>>(Reports.new);
 
 class Reviews extends Notifier<Map<String, List<({String text, int stars})>>> {
   @override

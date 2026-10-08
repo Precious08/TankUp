@@ -1,6 +1,7 @@
 // Station bottom sheet: info, compare, reviews, actions (PRD §8-§10, §19).
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/app_state.dart';
 import '../../core/models.dart';
 import '../../core/stations_repo.dart';
@@ -137,6 +138,25 @@ class StationSheet extends ConsumerWidget {
             child: const Text('Write a review'),
           ),
           const SizedBox(height: 12),
+          Text('Spot something wrong?',
+              style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 8),
+          Row(children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => _reportPrice(context, ref, s),
+                child: const Text('Report price'),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => _suggestEdit(context, ref, s),
+                child: const Text('Suggest edit'),
+              ),
+            ),
+          ]),
+          const SizedBox(height: 12),
           Text('Compare nearby ${fuelName(key)}',
               style: Theme.of(context).textTheme.titleMedium),
           for (final r in top)
@@ -153,6 +173,101 @@ class StationSheet extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _reportPrice(
+      BuildContext context, WidgetRef ref, Station s) async {
+    final price = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Report price change'),
+        content: TextField(
+          controller: price,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: InputDecoration(labelText: 'New price in ₦ (${s.unit})'),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Send')),
+        ],
+      ),
+    );
+    final v = double.tryParse(price.text.trim());
+    if (ok != true || v == null || v <= 0) return;
+    final sent = await ref.read(reportsProvider.notifier).submit(
+          kind: 'price',
+          payload: {
+            'station': s.name,
+            'area': s.area,
+            'state': s.state,
+            'fuel': s.fuels.contains(Fuel.petrol) ? 'Petrol' : fuelName(s.fuels.first),
+            'price': v,
+          },
+          note: 'via app',
+          client: backendOn ? Supabase.instance.client : null,
+        );
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(sent
+              ? 'Thanks — price report sent for review ✓'
+              : 'Saved — will send when online ✓')));
+    }
+  }
+
+  Future<void> _suggestEdit(
+      BuildContext context, WidgetRef ref, Station s) async {
+    const fields = ['Hours', 'Availability', 'Address', 'Other'];
+    var field = fields[0];
+    final value = TextEditingController();
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => StatefulBuilder(
+        builder: (_, setD) => AlertDialog(
+          title: const Text('Suggest an edit'),
+          content: Column(mainAxisSize: MainAxisSize.min, children: [
+            DropdownButton<String>(
+              value: field,
+              isExpanded: true,
+              items: [for (final f in fields) DropdownMenuItem(value: f, child: Text(f))],
+              onChanged: (x) => setD(() => field = x ?? field),
+            ),
+            TextField(controller: value, decoration: const InputDecoration(labelText: 'Correct value')),
+          ]),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel')),
+            TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Send')),
+          ],
+        ),
+      ),
+    );
+    if (ok != true || value.text.trim().isEmpty) return;
+    final sent = await ref.read(reportsProvider.notifier).submit(
+          kind: 'edit',
+          payload: {
+            'station': s.name,
+            'area': s.area,
+            'state': s.state,
+            'field': field,
+            'value': value.text.trim(),
+          },
+          note: 'via app',
+          client: backendOn ? Supabase.instance.client : null,
+        );
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(sent
+              ? 'Thanks — edit sent for review ✓'
+              : 'Saved — will send when online ✓')));
+    }
   }
 
   Widget _kv(String k, String v) => Padding(

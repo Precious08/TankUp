@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/app_state.dart';
 import '../../core/models.dart';
 import '../../core/stations_repo.dart';
@@ -22,6 +23,19 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('TankUp'),
         actions: [
+          IconButton(
+            tooltip: 'Add missing station',
+            icon: const Icon(Icons.add_location_alt_outlined),
+            onPressed: () {
+              final known = ref.read(stationsProvider).value ?? const <Station>[];
+              final states = <String>{for (final s in known) s.state}.toList()..sort();
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                builder: (_) => _AddStationSheet(states: states.isEmpty ? ['Lagos'] : states),
+              );
+            },
+          ),
           if (!backendOn)
             const Padding(
               padding: EdgeInsets.only(right: 4),
@@ -362,6 +376,123 @@ void showStationSheet(BuildContext context, Station s) {
     isScrollControlled: true,
     builder: (_) => StationSheet(station: s),
   );
+}
+
+class _AddStationSheet extends ConsumerStatefulWidget {
+  final List<String> states;
+  const _AddStationSheet({required this.states});
+
+  @override
+  ConsumerState<_AddStationSheet> createState() => _AddStationSheetState();
+}
+
+class _AddStationSheetState extends ConsumerState<_AddStationSheet> {
+  final name = TextEditingController();
+  final area = TextEditingController();
+  final price = TextEditingController();
+  late String state = widget.states.first;
+  Fuel fuel = Fuel.petrol;
+
+  @override
+  void dispose() {
+    name.dispose();
+    area.dispose();
+    price.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pending = ref.watch(reportsProvider).length;
+    return SafeArea(
+      child: ListView(
+        shrinkWrap: true,
+        padding: EdgeInsets.fromLTRB(
+            20, 8, 20, 24 + MediaQuery.of(context).viewInsets.bottom),
+        children: [
+          Center(
+            child: Container(
+                width: 44,
+                height: 5,
+                decoration: BoxDecoration(
+                    color: Colors.grey.shade400,
+                    borderRadius: BorderRadius.circular(99))),
+          ),
+          const SizedBox(height: 8),
+          Text('Add missing station',
+              style: Theme.of(context).textTheme.headlineSmall),
+          const Text('Our team pins it on the map after review.',
+              style: TextStyle(color: Colors.grey)),
+          const SizedBox(height: 12),
+          TextField(controller: name,
+              decoration: const InputDecoration(labelText: 'Station name')),
+          const SizedBox(height: 8),
+          DropdownButton<String>(
+            value: state,
+            isExpanded: true,
+            items: [for (final s in widget.states) DropdownMenuItem(value: s, child: Text(s))],
+            onChanged: (v) => setState(() => state = v ?? state),
+          ),
+          const SizedBox(height: 8),
+          TextField(controller: area,
+              decoration: const InputDecoration(labelText: 'Area / street')),
+          const SizedBox(height: 8),
+          SegmentedButton<Fuel>(
+            segments: const [
+              ButtonSegment(value: Fuel.petrol, label: Text('Petrol')),
+              ButtonSegment(value: Fuel.cng, label: Text('CNG')),
+              ButtonSegment(value: Fuel.ev, label: Text('EV')),
+            ],
+            selected: {fuel},
+            onSelectionChanged: (s) => setState(() => fuel = s.first),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: price,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: const InputDecoration(labelText: 'Price in ₦ (if known)'),
+          ),
+          const SizedBox(height: 16),
+          FilledButton(
+            onPressed: () async {
+              if (name.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Give the station a name first')));
+                return;
+              }
+              final sent = await ref.read(reportsProvider.notifier).submit(
+                    kind: 'new_station',
+                    payload: {
+                      'name': name.text.trim(),
+                      'state': state,
+                      'area': area.text.trim(),
+                      'fuel': fuelName(fuel),
+                      'price': double.tryParse(price.text.trim()),
+                    },
+                    note: 'via app',
+                    client: backendOn ? Supabase.instance.client : null,
+                  );
+              if (context.mounted) {
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(sent
+                        ? 'Thanks — station sent for review ✓'
+                        : 'Saved — will send when online ✓')));
+              }
+            },
+            child: const Text('Send for review'),
+          ),
+          if (pending > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text('$pending report(s) waiting for connection',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.grey, fontSize: 12)),
+            ),
+        ],
+      ),
+    );
+  }
 }
 
 class StationTile extends ConsumerWidget {
