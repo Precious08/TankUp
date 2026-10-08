@@ -62,12 +62,12 @@ class HomeScreen extends ConsumerWidget {
               ),
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
                 child: Row(
                   children: [
                     for (final opt in const [null, Fuel.petrol, Fuel.cng, Fuel.ev])
                       Padding(
-                        padding: const EdgeInsets.only(right: 8),
+                        padding: const EdgeInsets.only(right: 10),
                         child: FilterChip(
                           label: Text(opt == null ? 'All' : fuelName(opt)),
                           selected: f.fuel == opt,
@@ -82,6 +82,7 @@ class HomeScreen extends ConsumerWidget {
                   ],
                 ),
               ),
+              const SizedBox(height: 10),
               SizedBox(height: 220, child: _MapView(stations: items)),
               if (cmp.isNotEmpty)
                 Padding(
