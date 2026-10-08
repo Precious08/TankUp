@@ -26,8 +26,7 @@ Answer: **"Where can I get the energy I need, how much will it cost, and how do 
 ```
 TankUp/
 ├── README.md
-├── demo.html            # full interactive web demo (Lagos showcase)
-├── mobile.html          # mobile-first demo: the lead product surface
+├── mobile.html          # mobile-first demo: the product surface
 ├── gallery.html         # design system gallery (open in browser)
 ├── data/stations.js     # generated station data (see scripts/)
 ├── .env.example         # copy to .env (never commit real keys)
@@ -80,7 +79,8 @@ Every driver can change anything they own from Profile, no support needed:
 - [x] Phase 2 architecture (5 ADRs in docs/adr: stack, structure, data flow, auth, maps)
 - [x] Phase 3 data model + API contract (supabase/ schema + seed, docs/api/contract.md)
 - [ ] Backend build (Phase 4 — next: live Supabase project)
-- [ ] App scaffold (Flutter + Supabase + Mapbox, per plan)
+- [x] Phase 5 app scaffold (`app/`: 5 tabs, Supabase-or-sample, analyze clean, tests green, web build proven)
+- [ ] Native Mapbox tiles (Phase 6 — scaffold uses a live-geometry placeholder)
 - [ ] MVP build
 
 ## Next steps

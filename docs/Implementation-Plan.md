@@ -113,7 +113,7 @@ Exit: contract doc reviewed against §16/§17/§27; seed data queryable; avatar 
 
 Goal: working API + auth + storage before app features.
 
-Done: `tankup-dev` live, migrations 0001–0003 + both seeds run (215 rows verified), Email OTP on, `avatars` bucket public with policies, demos reading live with bundled fallback (`config.local.js`, gitignored). Left: Google OAuth (needs Cloud Console session), `tankup-prod` clone before launch.
+Done: `tankup-dev` live, migrations 0001–0003 + both seeds run (215 rows verified), Email OTP on, Google OAuth on (Cloud project `tankup`, Web client, test user added), `avatars` bucket public with policies, demos reading live with bundled fallback (`config.local.js`, gitignored). Left: `tankup-prod` clone before launch. First real Google-login click-test happens with the app login screen (Phase 5).
 
 - [ ] Supabase project (dev + prod = the 2 Free projects), migrations for all tables, RLS policies, seed script.
 - [ ] Auth: email OTP + Google/Apple + guest→account migration. Phone (SMS) OTP explicitly deferred — SMS is never free; use Termii pay-as-you-go only after traction.
@@ -126,7 +126,7 @@ Exit: Postman/HTTP file runs green against dev; RLS blocks cross-driver reads (t
 
 ---
 
-## Phase 5 — App scaffold + navigation shell (PRD §21)
+## Phase 5 — App scaffold + navigation shell (PRD §21) — SCAFFOLD DONE (in `app/`)
 
 Goal: five tabs with empty-but-routed screens.
 
@@ -143,7 +143,7 @@ Exit: app launches cold to map tab <2s on mid-range Android; onboarding completa
 
 Goal: Open → Find → Compare → Choose.
 
-Surface strategy (decided): `mobile.html` is the lead device surface — new features land there first. `demo.html` is the desktop showcase and feature reference (compare tray, reviews, trips planner live there until ported).
+Surface strategy (decided): `mobile.html` is the single demo surface (retired `demo.html` to `docs/archive/` — it duplicated mobile and doubled maintenance).
 
 - Home map: user dot, station markers (3 types), re-center button, bottom sheet (nearby list + quick filters + saved/recent).
 - Search: station/area/street/destination; "Lekki" returns stations around Lekki.
