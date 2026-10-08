@@ -1,24 +1,16 @@
-// Driver settings hub (PRD §27): profile, appearance, vehicles, notifications.
+// Driver profile: who you are and what you drive.
+// Opened from the home avatar. Settings live under the Settings tab.
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../core/app_state.dart';
 import '../../core/models.dart';
-import '../../core/store.dart' as store;
 
-class ProfileScreen extends ConsumerStatefulWidget {
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
-  @override
-  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
-}
 
-class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  late bool notifPrice = store.getBool('notifPrice', fallback: true);
-  late bool notifAvail = store.getBool('notifAvail', fallback: true);
-  late bool notifRoute = store.getBool('notifRoute');
-
-  Future<void> _pickAvatar() async {
+  Future<void> _pickAvatar(WidgetRef ref, BuildContext context) async {
     try {
       final img = await ImagePicker()
           .pickImage(source: ImageSource.gallery, maxWidth: 512, imageQuality: 80);
@@ -26,93 +18,88 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       final bytes = await img.readAsBytes();
       ref.read(avatarBytesProvider.notifier).set(bytes);
       ref.read(prefsProvider.notifier).setAvatarPath(img.path);
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(const SnackBar(content: Text('Avatar updated ✓')));
       }
     } catch (_) {
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Could not open gallery')));
       }
     }
   }
 
-  Widget _avatar(double r, String name, List<int>? bytes) {
-    if (bytes != null) {
-      return CircleAvatar(radius: r, backgroundImage: MemoryImage(Uint8List.fromList(bytes)));
-    }
-    return CircleAvatar(
-        radius: r, child: Text(name.isEmpty ? 'D' : name[0].toUpperCase()));
-  }
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final prefs = ref.watch(prefsProvider);
     final bytes = ref.watch(avatarBytesProvider);
     final vehicles = ref.watch(vehiclesProvider);
     final active = vehicles.firstWhere((v) => v.active, orElse: () => vehicles.first);
+    final saved = ref.watch(savedProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: const Text('Profile')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Row(children: [
-            GestureDetector(onTap: _pickAvatar, child: _avatar(28, prefs.name, bytes)),
-            const SizedBox(width: 12),
-            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(prefs.name, style: Theme.of(context).textTheme.titleLarge),
-              Text('${fuelName(active.energy)} · ${active.nickname} · local',
-                  style: const TextStyle(color: Colors.grey)),
+          Center(
+            child: Column(children: [
+              GestureDetector(
+                onTap: () => _pickAvatar(ref, context),
+                child: bytes != null
+                    ? CircleAvatar(
+                        radius: 44,
+                        backgroundImage: MemoryImage(Uint8List.fromList(bytes)))
+                    : CircleAvatar(
+                        radius: 44,
+                        child: Text(
+                          prefs.name.isEmpty ? 'D' : prefs.name[0].toUpperCase(),
+                          style: const TextStyle(fontSize: 28),
+                        ),
+                      ),
+              ),
+              TextButton(
+                onPressed: () => _pickAvatar(ref, context),
+                child: const Text('Change photo'),
+              ),
             ]),
-            const Spacer(),
-            TextButton(
-              onPressed: () async {
-                final c = TextEditingController(text: prefs.name);
-                final v = await showDialog<String>(
-                  context: context,
-                  builder: (_) => AlertDialog(
-                    title: const Text('Display name'),
-                    content: TextField(controller: c, autofocus: true),
-                    actions: [
-                      TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text('Cancel')),
-                      TextButton(
-                          onPressed: () => Navigator.pop(context, c.text.trim()),
-                          child: const Text('Save')),
-                    ],
-                  ),
-                );
-                if (v != null && v.isNotEmpty) {
-                  ref.read(prefsProvider.notifier).setName(v);
-                }
-              },
-              child: const Text('Edit'),
-            ),
-          ]),
-          TextButton.icon(
-            icon: const Icon(Icons.photo_camera_outlined),
-            label: const Text('Change avatar photo'),
-            onPressed: _pickAvatar,
           ),
-          _group(context, 'APPEARANCE'),
-          SwitchListTile(
-            title: const Text('Dark mode'),
-            value: prefs.dark,
-            onChanged: (v) => ref.read(prefsProvider.notifier).setDark(v),
+          Center(
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Text(prefs.name, style: Theme.of(context).textTheme.headlineSmall),
+              IconButton(
+                icon: const Icon(Icons.edit_outlined, size: 20),
+                onPressed: () async {
+                  final c = TextEditingController(text: prefs.name);
+                  final v = await showDialog<String>(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      title: const Text('Display name'),
+                      content: TextField(controller: c, autofocus: true),
+                      actions: [
+                        TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Cancel')),
+                        TextButton(
+                            onPressed: () => Navigator.pop(context, c.text.trim()),
+                            child: const Text('Save')),
+                      ],
+                    ),
+                  );
+                  if (v != null && v.isNotEmpty) {
+                    ref.read(prefsProvider.notifier).setName(v);
+                  }
+                },
+              ),
+            ]),
           ),
-          SwitchListTile(
-            title: const Text('Miles instead of km'),
-            value: prefs.miles,
-            onChanged: (v) => ref.read(prefsProvider.notifier).setMiles(v),
+          Text(
+            '${fuelName(active.energy)} · ${active.nickname} · ${saved.length} saved',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.grey),
           ),
-          SwitchListTile(
-            title: const Text('Voice guidance'),
-            value: prefs.voice,
-            onChanged: (v) => ref.read(prefsProvider.notifier).setVoice(v),
-          ),
-          _group(context, 'MY VEHICLES'),
+          const SizedBox(height: 12),
+          Text('My vehicles', style: Theme.of(context).textTheme.titleMedium),
           for (var i = 0; i < vehicles.length; i++)
             ListTile(
               contentPadding: EdgeInsets.zero,
@@ -177,59 +164,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               }
             },
           ),
-          _group(context, 'NOTIFICATIONS'),
-          SwitchListTile(
-            title: const Text('Price changes'),
-            value: notifPrice,
-            onChanged: (v) {
-              setState(() => notifPrice = v);
-              store.setBool('notifPrice', v);
-            },
-          ),
-          SwitchListTile(
-            title: const Text('Availability updates'),
-            value: notifAvail,
-            onChanged: (v) {
-              setState(() => notifAvail = v);
-              store.setBool('notifAvail', v);
-            },
-          ),
-          SwitchListTile(
-            title: const Text('Route updates'),
-            value: notifRoute,
-            onChanged: (v) {
-              setState(() => notifRoute = v);
-              store.setBool('notifRoute', v);
-            },
-          ),
-          _group(context, 'PRIVACY'),
-          OutlinedButton(
-            onPressed: () {
-              for (final id in ref.read(savedProvider).toList()) {
-                ref.read(savedProvider.notifier).toggle(id);
-              }
-              ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Saved stations cleared')));
-            },
-            child: const Text('Clear saved stations'),
-          ),
-          _group(context, 'ABOUT'),
-          const ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text('TankUp 1.0.0 (scaffold)'),
-            subtitle: Text('Find the right place to power your vehicle.'),
-          ),
         ],
       ),
     );
   }
-
-  Widget _group(BuildContext context, String title) => Padding(
-        padding: const EdgeInsets.only(top: 12, bottom: 4),
-        child: Text(title,
-            style: TextStyle(
-                color: Theme.of(context).colorScheme.secondary,
-                fontWeight: FontWeight.bold,
-                fontSize: 12)),
-      );
 }

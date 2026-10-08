@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 import '../../core/app_state.dart';
 import '../../core/models.dart';
 import '../../core/stations_repo.dart';
+import '../profile/profile_screen.dart';
 import '../stations/station_details.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -28,7 +29,8 @@ class HomeScreen extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: _AvatarButton(
-              onTap: () => ref.read(tabIndexProvider.notifier).go(4),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ProfileScreen())),
             ),
           ),
         ],

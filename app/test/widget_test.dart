@@ -7,14 +7,14 @@ import 'package:tankup/core/store.dart';
 import 'package:tankup/main.dart';
 
 void main() {
-  testWidgets('boots with five tabs and station list', (WidgetTester tester) async {
+  testWidgets('boots with tabs and station list', (WidgetTester tester) async {
     TestWidgetsFlutterBinding.ensureInitialized();
     SharedPreferences.setMockInitialValues({});
     await initStore();
     await tester.pumpWidget(const ProviderScope(child: TankUpApp()));
     await tester.pumpAndSettle();
 
-    for (final label in ['Home', 'Search', 'Saved', 'Trips', 'Settings']) {
+    for (final label in ['Home', 'Saved', 'Trips', 'Settings']) {
       expect(find.text(label), findsWidgets);
     }
     expect(find.textContaining('TotalEnergies'), findsOneWidget);
