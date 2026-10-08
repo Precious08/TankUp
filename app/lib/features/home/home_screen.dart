@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 import '../../core/app_state.dart';
 import '../../core/models.dart';
 import '../../core/stations_repo.dart';
+import '../../design/theme.dart';
 import '../profile/profile_screen.dart';
 import '../stations/station_details.dart';
 
@@ -371,30 +372,30 @@ class StationTile extends ConsumerWidget {
     final s = station;
     final saved = ref.watch(savedProvider).contains(s.id);
     final scheme = Theme.of(context).colorScheme;
+    final tint = fuelChip(
+        s.fuels.first, Theme.of(context).brightness);
     return Card(
-      margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         leading: Container(
-          width: 42,
-          height: 42,
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(
-            color: s.open ? scheme.primaryContainer : scheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(13),
+            color: s.open ? tint.bg : scheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(14),
           ),
           child: Icon(Icons.location_on,
-              color: s.open ? scheme.onPrimaryContainer : Colors.grey),
+              color: s.open ? tint.fg : Colors.grey),
         ),
-        title: Text(s.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+        title: Text(s.name, style: const TextStyle(fontWeight: FontWeight.w700)),
         subtitle: Padding(
-          padding: const EdgeInsets.only(top: 3),
+          padding: const EdgeInsets.only(top: 4),
           child: Text(
               '${s.area}, ${s.state} · ${s.open ? "Open" : "Closed"} · ${s.availability}'),
         ),
         trailing: Row(mainAxisSize: MainAxisSize.min, children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
             decoration: BoxDecoration(
               color: scheme.primaryContainer,
               borderRadius: BorderRadius.circular(999),

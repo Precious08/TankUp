@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/app_state.dart';
 import '../../core/models.dart';
 import '../../core/stations_repo.dart';
+import '../../design/theme.dart';
 import '../navigation/nav_screen.dart';
 
 class StationSheet extends ConsumerWidget {
@@ -22,10 +23,12 @@ class StationSheet extends ConsumerWidget {
     final top = nearby.take(3).toList();
     final best = top.isEmpty ? s.price : top.map((e) => e.price).reduce((a, b) => a < b ? a : b);
     final reviews = ref.watch(reviewsProvider)[s.name] ?? const [];
+    final scheme = Theme.of(context).colorScheme;
+    final brightness = Theme.of(context).brightness;
     return SafeArea(
       child: ListView(
         shrinkWrap: true,
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
         children: [
           Center(
             child: Container(
@@ -34,21 +37,58 @@ class StationSheet extends ConsumerWidget {
                     color: Colors.grey.shade400,
                     borderRadius: BorderRadius.circular(99))),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Text(s.name, style: Theme.of(context).textTheme.headlineSmall),
+          const SizedBox(height: 4),
           Text('${s.address}, ${s.lga} · ${s.state}',
               style: const TextStyle(color: Colors.grey)),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Wrap(
               spacing: 6,
-              children: [for (final f in s.fuels) Chip(label: Text(fuelName(f)))]),
-          const SizedBox(height: 8),
-          Text(s.priceLabel, style: Theme.of(context).textTheme.displaySmall),
-          const SizedBox(height: 8),
-          _kv('Availability', s.availability),
-          _kv('Hours', s.hours),
-          _kv('Rating', '${s.rating} ★ (${s.reviews})'),
+              runSpacing: 6,
+              children: [
+                for (final f in s.fuels)
+                  Builder(builder: (_) {
+                    final t = fuelChip(f, brightness);
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                          color: t.bg, borderRadius: BorderRadius.circular(7)),
+                      child: Text(fuelName(f).toUpperCase(),
+                          style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.6,
+                              color: t.fg)),
+                    );
+                  }),
+              ]),
           const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(s.priceLabel,
+                    style: Theme.of(context).textTheme.displaySmall),
+                const SizedBox(height: 2),
+                Text('${s.open ? "Open" : "Closed"} · ${s.availability} · updated recently',
+                    style: const TextStyle(color: Colors.grey, fontSize: 13)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          _kv('Availability', s.availability),
+          const Divider(height: 1),
+          _kv('Hours', s.hours),
+          const Divider(height: 1),
+          _kv('Rating', '${s.rating} ★ (${s.reviews})'),
+          const SizedBox(height: 16),
           Row(children: [
             Expanded(
               child: FilledButton(
