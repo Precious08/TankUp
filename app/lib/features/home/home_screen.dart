@@ -387,14 +387,21 @@ class StationTile extends ConsumerWidget {
           child: Icon(Icons.location_on,
               color: s.open ? tint.fg : Colors.grey),
         ),
-        title: Text(s.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+        title: Text(s.name,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis),
         subtitle: Padding(
           padding: const EdgeInsets.only(top: 4),
           child: Text(
-              '${s.area}, ${s.state} · ${s.open ? "Open" : "Closed"} · ${s.availability}'),
+              '${s.area}, ${s.state} · ${s.open ? "Open" : "Closed"} · ${s.availability}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis),
         ),
         trailing: Row(mainAxisSize: MainAxisSize.min, children: [
           Container(
+            constraints: const BoxConstraints(minWidth: 92),
+            alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
             decoration: BoxDecoration(
               color: scheme.primaryContainer,
