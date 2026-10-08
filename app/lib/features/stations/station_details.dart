@@ -198,7 +198,14 @@ class StationSheet extends ConsumerWidget {
       ),
     );
     final v = double.tryParse(price.text.trim());
-    if (ok != true || v == null || v <= 0) return;
+    if (ok != true) return;
+    if (v == null || v <= 0) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Enter a valid price, e.g. 870')));
+      }
+      return;
+    }
     final sent = await ref.read(reportsProvider.notifier).submit(
           kind: 'price',
           payload: {

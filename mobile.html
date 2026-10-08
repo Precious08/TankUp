@@ -384,6 +384,14 @@ function positionMini(){const m=$("mini");if(!m||m.style.display==="none")return
 /* ================= SHEET / SEARCH / STATES ================= */
 const SNAPS=[110,0.42,0.7];let snap=1;
 function sheetH(){return snap===0?SNAPS[0]:Math.round(vh()*SNAPS[snap]);}
+function sheetStats(items){
+  const open=items.filter(s=>s.open).length;
+  const ps=items.filter(s=>s.fuels.includes("Petrol")).map(s=>s.pp);
+  const cheap=ps.length?" · from ₦"+Math.min(...ps).toLocaleString()+"/L":"";
+  const fuels=["Petrol","CNG","EV"].map(f=>{const n=items.filter(s=>s.fuels.includes(f)).length;
+    return n?`<span style="color:${FC[f]}">●</span>${n}`:"";}).filter(Boolean).join(" ");
+  return `${items.length} stations · ${open} open${cheap}<br>${fuels} <span style="opacity:.7">· SAMPLE DATA</span>`;
+}
 function renderSheet(){
   if(S.mode==="trips")return renderTrips();
   const near=S.mode==="near";
@@ -394,7 +402,7 @@ function renderSheet(){
     <button class="btn ${S.mode==="near"?"btn-p":"btn-q"}" style="min-height:38px;font-size:13px;flex:1" onclick="S.mode='near';renderSheet()">Nearby</button>
     <button class="btn ${S.mode==="trips"?"btn-p":"btn-q"}" style="min-height:38px;font-size:13px;flex:1" onclick="S.mode='trips';renderSheet()">Trips</button>
     <button class="btn ${S.mode==="saved"?"btn-p":"btn-q"}" style="min-height:38px;font-size:13px;flex:1" onclick="S.mode='saved';renderSheet()">♥ Saved (${S.saved.size})</button></div>
-   ${S.mode==="trips"?"":`<div>${near?`Near ${S.posLabel}`:"Your saved stations"} <small>· ${items.length} · SAMPLE DATA</small></div>`}`;
+   ${S.mode==="trips"?"":`<div>${near?`Near ${S.posLabel}`:"Your saved stations"} <small>· ${near?sheetStats(items):items.length+" · SAMPLE DATA"}</small></div>`}`;
   $("sheet").style.height=sheetH()+"px";
   $("list").innerHTML=items.length?items.map(s=>
    `<div class="row" onclick="focusStation(${s.id})">
