@@ -79,6 +79,38 @@ class HomeScreen extends ConsumerWidget {
                 padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
                 child: Row(
                   children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: ActionChip(
+                        avatar: const Icon(Icons.map_outlined, size: 18),
+                        label: Text(f.state),
+                        onPressed: () async {
+                          final states = <String>{
+                            for (final s in all) s.state
+                          }.toList()
+                            ..sort();
+                          final pick = await showDialog<String>(
+                            context: context,
+                            builder: (_) => SimpleDialog(
+                              title: const Text('Choose state'),
+                              children: [
+                                for (final t in states)
+                                  SimpleDialogOption(
+                                    onPressed: () => Navigator.pop(context, t),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 8),
+                                      child: Text('$t (${all.where((s) => s.state == t).length})'),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          );
+                          if (pick != null) {
+                            ref.read(filtersProvider.notifier).setState(pick);
+                          }
+                        },
+                      ),
+                    ),
                     for (final opt in const [null, Fuel.petrol, Fuel.cng, Fuel.ev])
                       Padding(
                         padding: const EdgeInsets.only(right: 10),
@@ -271,8 +303,29 @@ class _MapViewState extends ConsumerState<_MapView> {
                               top: p.dy,
                               child: GestureDetector(
                                 onTap: () => showStationSheet(context, s),
-                                child: Icon(Icons.location_on,
-                                    color: s.open ? pin(s) : Colors.grey, size: 28),
+                                child: Transform.rotate(
+                                  angle: -0.7853982,
+                                  child: Container(
+                                    width: 26,
+                                    height: 26,
+                                    decoration: BoxDecoration(
+                                      color: s.open ? pin(s) : Colors.grey,
+                                      borderRadius: const BorderRadius.only(
+                                        topLeft: Radius.circular(13),
+                                        topRight: Radius.circular(13),
+                                        bottomRight: Radius.circular(13),
+                                        bottomLeft: Radius.circular(3),
+                                      ),
+                                      border: Border.all(color: Colors.white, width: 3),
+                                      boxShadow: const [
+                                        BoxShadow(
+                                            color: Color(0x8C0F172A),
+                                            blurRadius: 4,
+                                            spreadRadius: 1)
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               ),
                             );
                           }),

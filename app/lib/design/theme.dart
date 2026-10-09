@@ -1,4 +1,6 @@
 // TankUp Material themes built from tokens.dart (Phase 1).
+// Note: Plus Jakarta Sans via google_fonts is parked — v9 trips the
+// analyzer on this SDK (see dev log). System stack until then.
 import 'package:flutter/material.dart';
 import '../core/models.dart';
 import 'tokens.dart';
@@ -27,11 +29,10 @@ ThemeData tankLight() {
     seedColor: const Color(TankColors.actionL),
     brightness: Brightness.light,
   );
-  return ThemeData(
-    useMaterial3: true,
+  final base = ThemeData(useMaterial3: true);
+  return base.copyWith(
     colorScheme: scheme.copyWith(primary: const Color(TankColors.actionL)),
     scaffoldBackgroundColor: const Color(TankColors.washL),
-    fontFamilyFallback: const ['Segoe UI', 'Roboto', 'Arial'],
     cardTheme: const CardThemeData(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -54,10 +55,9 @@ ThemeData tankDark() {
     seedColor: const Color(TankColors.actionD),
     brightness: Brightness.dark,
   );
-  return ThemeData(
-    useMaterial3: true,
+  final base = ThemeData(useMaterial3: true);
+  return base.copyWith(
     colorScheme: scheme.copyWith(primary: const Color(TankColors.actionD)),
     scaffoldBackgroundColor: const Color(TankColors.washD),
-    fontFamilyFallback: const ['Segoe UI', 'Roboto', 'Arial'],
   );
 }
